@@ -1,0 +1,1286 @@
+openapi: 3.0.3
+info:
+  title: Authorization Platform API
+  description: |
+    Enterprise-grade authorization platform supporting RBAC, ABAC, and ReBAC models.
+    This API provides fine-grained access control, policy management, and audit capabilities.
+  version: 1.0.0
+  contact:
+    name: API Support
+    email: api-support@authplatform.io
+  license:
+    name: Apache 2.0
+    url: https://www.apache.org/licenses/LICENSE-2.0.html
+
+servers:
+  - url: https://api.authplatform.io/v1
+    description: Production server
+  - url: https://api-staging.authplatform.io/v1
+    description: Staging server
+  - url: http://localhost:8080/v1
+    description: Development server
+
+security:
+  - BearerAuth: []
+  - ApiKeyAuth: []
+
+tags:
+  - name: Authorization
+    description: Authorization decision endpoints
+  - name: Policies
+    description: Policy management operations
+  - name: Users
+    description: User and identity management
+  - name: Roles
+    description: Role-based access control
+  - name: Relationships
+    description: Relationship-based access control (ReBAC)
+  - name: Audit
+    description: Audit log and compliance
+  - name: Admin
+    description: Administrative operations
+
+paths:
+  /authorize:
+    post:
+      tags:
+        - Authorization
+      summary: Make authorization decision
+      description: Evaluates if a subject can perform an action on a resource
+      operationId: authorize
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/AuthorizeRequest'
+      responses:
+        '200':
+          description: Authorization decision made successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AuthorizeResponse'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '429':
+          $ref: '#/components/responses/RateLimited'
+        '500':
+          $ref: '#/components/responses/InternalError'
+
+  /authorize/batch:
+    post:
+      tags:
+        - Authorization
+      summary: Batch authorization decisions
+      description: Evaluates multiple authorization requests in a single call
+      operationId: authorizeBatch
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/BatchAuthorizeRequest'
+      responses:
+        '200':
+          description: Batch authorization completed
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/BatchAuthorizeResponse'
+
+  /policies:
+    get:
+      tags:
+        - Policies
+      summary: List policies
+      description: Retrieve a paginated list of policies
+      operationId: listPolicies
+      parameters:
+        - name: type
+          in: query
+          schema:
+            type: string
+            enum: [RBAC, ABAC, ReBAC]
+        - name: status
+          in: query
+          schema:
+            type: string
+            enum: [draft, active, archived]
+        - name: tag
+          in: query
+          schema:
+            type: string
+        - name: page
+          in: query
+          schema:
+            type: integer
+            default: 1
+            minimum: 1
+        - name: limit
+          in: query
+          schema:
+            type: integer
+            default: 20
+            minimum: 1
+            maximum: 100
+        - name: sort
+          in: query
+          schema:
+            type: string
+            example: created_at:desc
+      responses:
+        '200':
+          description: Policy list retrieved successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PolicyListResponse'
+    
+    post:
+      tags:
+        - Policies
+      summary: Create policy
+      description: Create a new authorization policy
+      operationId: createPolicy
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreatePolicyRequest'
+      responses:
+        '201':
+          description: Policy created successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Policy'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '409':
+          $ref: '#/components/responses/Conflict'
+
+  /policies/{policyId}:
+    get:
+      tags:
+        - Policies
+      summary: Get policy details
+      description: Retrieve details of a specific policy
+      operationId: getPolicy
+      parameters:
+        - name: policyId
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        '200':
+          description: Policy details retrieved
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Policy'
+        '404':
+          $ref: '#/components/responses/NotFound'
+    
+    put:
+      tags:
+        - Policies
+      summary: Update policy
+      description: Update an existing policy (creates new version)
+      operationId: updatePolicy
+      parameters:
+        - name: policyId
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UpdatePolicyRequest'
+      responses:
+        '200':
+          description: Policy updated successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Policy'
+    
+    delete:
+      tags:
+        - Policies
+      summary: Delete policy
+      description: Soft delete a policy
+      operationId: deletePolicy
+      parameters:
+        - name: policyId
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        '204':
+          description: Policy deleted successfully
+        '404':
+          $ref: '#/components/responses/NotFound'
+
+  /policies/{policyId}/publish:
+    post:
+      tags:
+        - Policies
+      summary: Publish policy
+      description: Publish a draft policy to make it active
+      operationId: publishPolicy
+      parameters:
+        - name: policyId
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        '200':
+          description: Policy published successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Policy'
+
+  /policies/{policyId}/test:
+    post:
+      tags:
+        - Policies
+      summary: Test policy
+      description: Test a policy with sample data
+      operationId: testPolicy
+      parameters:
+        - name: policyId
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PolicyTestRequest'
+      responses:
+        '200':
+          description: Policy test completed
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PolicyTestResponse'
+
+  /users:
+    get:
+      tags:
+        - Users
+      summary: List users
+      description: Retrieve a paginated list of users
+      operationId: listUsers
+      parameters:
+        - $ref: '#/components/parameters/PageParam'
+        - $ref: '#/components/parameters/LimitParam'
+      responses:
+        '200':
+          description: User list retrieved
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UserListResponse'
+
+  /users/{userId}:
+    get:
+      tags:
+        - Users
+      summary: Get user details
+      description: Retrieve details of a specific user
+      operationId: getUser
+      parameters:
+        - name: userId
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        '200':
+          description: User details retrieved
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/User'
+        '404':
+          $ref: '#/components/responses/NotFound'
+
+  /users/{userId}/roles:
+    get:
+      tags:
+        - Roles
+      summary: Get user roles
+      description: List all roles assigned to a user
+      operationId: getUserRoles
+      parameters:
+        - name: userId
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        '200':
+          description: User roles retrieved
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UserRolesResponse'
+    
+    post:
+      tags:
+        - Roles
+      summary: Assign role to user
+      description: Assign a role to a user
+      operationId: assignUserRole
+      parameters:
+        - name: userId
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/AssignRoleRequest'
+      responses:
+        '201':
+          description: Role assigned successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UserRole'
+
+  /users/{userId}/roles/{roleId}:
+    delete:
+      tags:
+        - Roles
+      summary: Revoke user role
+      description: Remove a role from a user
+      operationId: revokeUserRole
+      parameters:
+        - name: userId
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+        - name: roleId
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        '204':
+          description: Role revoked successfully
+
+  /roles:
+    get:
+      tags:
+        - Roles
+      summary: List roles
+      description: Retrieve all available roles
+      operationId: listRoles
+      responses:
+        '200':
+          description: Role list retrieved
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RoleListResponse'
+    
+    post:
+      tags:
+        - Roles
+      summary: Create role
+      description: Create a new role
+      operationId: createRole
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateRoleRequest'
+      responses:
+        '201':
+          description: Role created successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Role'
+
+  /relationships:
+    get:
+      tags:
+        - Relationships
+      summary: List relationships
+      description: Query relationships between entities
+      operationId: listRelationships
+      parameters:
+        - name: subject_type
+          in: query
+          schema:
+            type: string
+        - name: subject_id
+          in: query
+          schema:
+            type: string
+        - name: relation
+          in: query
+          schema:
+            type: string
+        - name: object_type
+          in: query
+          schema:
+            type: string
+        - name: object_id
+          in: query
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Relationships retrieved
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RelationshipListResponse'
+    
+    post:
+      tags:
+        - Relationships
+      summary: Create relationship
+      description: Establish a relationship between entities
+      operationId: createRelationship
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateRelationshipRequest'
+      responses:
+        '201':
+          description: Relationship created
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Relationship'
+
+  /audit-logs:
+    get:
+      tags:
+        - Audit
+      summary: Search audit logs
+      description: Query audit logs with filters
+      operationId: searchAuditLogs
+      parameters:
+        - name: user_id
+          in: query
+          schema:
+            type: string
+        - name: action
+          in: query
+          schema:
+            type: string
+        - name: resource_type
+          in: query
+          schema:
+            type: string
+        - name: decision
+          in: query
+          schema:
+            type: string
+            enum: [allow, deny]
+        - name: from
+          in: query
+          schema:
+            type: string
+            format: date-time
+        - name: to
+          in: query
+          schema:
+            type: string
+            format: date-time
+        - $ref: '#/components/parameters/PageParam'
+        - $ref: '#/components/parameters/LimitParam'
+      responses:
+        '200':
+          description: Audit logs retrieved
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AuditLogListResponse'
+
+  /health:
+    get:
+      tags:
+        - Admin
+      summary: Health check
+      description: Check service health status
+      operationId: healthCheck
+      security: []
+      responses:
+        '200':
+          description: Service is healthy
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HealthResponse'
+        '503':
+          description: Service is unhealthy
+
+  /metrics:
+    get:
+      tags:
+        - Admin
+      summary: Get metrics
+      description: Retrieve system metrics
+      operationId: getMetrics
+      responses:
+        '200':
+          description: Metrics retrieved
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/MetricsResponse'
+
+components:
+  securitySchemes:
+    BearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+    
+    ApiKeyAuth:
+      type: apiKey
+      in: header
+      name: X-API-Key
+
+  parameters:
+    PageParam:
+      name: page
+      in: query
+      description: Page number
+      schema:
+        type: integer
+        default: 1
+        minimum: 1
+    
+    LimitParam:
+      name: limit
+      in: query
+      description: Items per page
+      schema:
+        type: integer
+        default: 20
+        minimum: 1
+        maximum: 100
+
+  schemas:
+    AuthorizeRequest:
+      type: object
+      required:
+        - subject
+        - action
+        - resource
+      properties:
+        subject:
+          $ref: '#/components/schemas/Subject'
+        action:
+          type: string
+          example: read
+        resource:
+          $ref: '#/components/schemas/Resource'
+        context:
+          $ref: '#/components/schemas/Context'
+    
+    AuthorizeResponse:
+      type: object
+      properties:
+        data:
+          type: object
+          properties:
+            decision:
+              type: string
+              enum: [allow, deny]
+            reasons:
+              type: array
+              items:
+                type: string
+            evaluated_policies:
+              type: array
+              items:
+                $ref: '#/components/schemas/EvaluatedPolicy'
+            obligations:
+              type: array
+              items:
+                $ref: '#/components/schemas/Obligation'
+        metadata:
+          $ref: '#/components/schemas/ResponseMetadata'
+    
+    BatchAuthorizeRequest:
+      type: object
+      required:
+        - requests
+      properties:
+        requests:
+          type: array
+          items:
+            allOf:
+              - type: object
+                properties:
+                  id:
+                    type: string
+              - $ref: '#/components/schemas/AuthorizeRequest'
+        options:
+          type: object
+          properties:
+            parallel:
+              type: boolean
+              default: true
+            fail_fast:
+              type: boolean
+              default: false
+    
+    BatchAuthorizeResponse:
+      type: object
+      properties:
+        data:
+          type: object
+          properties:
+            results:
+              type: array
+              items:
+                type: object
+                properties:
+                  request_id:
+                    type: string
+                  decision:
+                    type: string
+                    enum: [allow, deny]
+                  reasons:
+                    type: array
+                    items:
+                      type: string
+            summary:
+              type: object
+              properties:
+                total:
+                  type: integer
+                allowed:
+                  type: integer
+                denied:
+                  type: integer
+                errors:
+                  type: integer
+    
+    Subject:
+      type: object
+      required:
+        - type
+        - id
+      properties:
+        type:
+          type: string
+          example: user
+        id:
+          type: string
+          example: user-123
+        attributes:
+          type: object
+          additionalProperties: true
+    
+    Resource:
+      type: object
+      required:
+        - type
+        - id
+      properties:
+        type:
+          type: string
+          example: document
+        id:
+          type: string
+          example: doc-456
+        attributes:
+          type: object
+          additionalProperties: true
+    
+    Context:
+      type: object
+      properties:
+        ip_address:
+          type: string
+          format: ipv4
+        time:
+          type: string
+          format: date-time
+        request_source:
+          type: string
+    
+    Policy:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        name:
+          type: string
+        description:
+          type: string
+        type:
+          type: string
+          enum: [RBAC, ABAC, ReBAC]
+        status:
+          type: string
+          enum: [draft, active, archived]
+        version:
+          type: integer
+        rules:
+          type: object
+          properties:
+            language:
+              type: string
+              enum: [rego, cedar]
+            content:
+              type: string
+        metadata:
+          type: object
+          properties:
+            tags:
+              type: array
+              items:
+                type: string
+            owner:
+              type: string
+        created_at:
+          type: string
+          format: date-time
+        updated_at:
+          type: string
+          format: date-time
+        created_by:
+          type: string
+    
+    CreatePolicyRequest:
+      type: object
+      required:
+        - name
+        - type
+        - rules
+      properties:
+        name:
+          type: string
+        description:
+          type: string
+        type:
+          type: string
+          enum: [RBAC, ABAC, ReBAC]
+        rules:
+          type: object
+          properties:
+            language:
+              type: string
+              enum: [rego, cedar]
+            content:
+              type: string
+        metadata:
+          type: object
+    
+    UpdatePolicyRequest:
+      type: object
+      properties:
+        description:
+          type: string
+        rules:
+          type: object
+          properties:
+            language:
+              type: string
+            content:
+              type: string
+        metadata:
+          type: object
+    
+    PolicyListResponse:
+      type: object
+      properties:
+        data:
+          type: object
+          properties:
+            policies:
+              type: array
+              items:
+                $ref: '#/components/schemas/Policy'
+            pagination:
+              $ref: '#/components/schemas/Pagination'
+    
+    PolicyTestRequest:
+      type: object
+      required:
+        - test_data
+      properties:
+        test_data:
+          type: array
+          items:
+            $ref: '#/components/schemas/AuthorizeRequest'
+    
+    PolicyTestResponse:
+      type: object
+      properties:
+        results:
+          type: array
+          items:
+            type: object
+            properties:
+              input:
+                $ref: '#/components/schemas/AuthorizeRequest'
+              output:
+                type: object
+                properties:
+                  decision:
+                    type: string
+                  reasons:
+                    type: array
+                    items:
+                      type: string
+        summary:
+          type: object
+          properties:
+            total:
+              type: integer
+            passed:
+              type: integer
+            failed:
+              type: integer
+    
+    User:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        email:
+          type: string
+          format: email
+        username:
+          type: string
+        full_name:
+          type: string
+        attributes:
+          type: object
+          additionalProperties: true
+        status:
+          type: string
+          enum: [active, inactive, suspended]
+        created_at:
+          type: string
+          format: date-time
+        last_login_at:
+          type: string
+          format: date-time
+    
+    UserListResponse:
+      type: object
+      properties:
+        data:
+          type: object
+          properties:
+            users:
+              type: array
+              items:
+                $ref: '#/components/schemas/User'
+            pagination:
+              $ref: '#/components/schemas/Pagination'
+    
+    Role:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        name:
+          type: string
+        description:
+          type: string
+        permissions:
+          type: array
+          items:
+            $ref: '#/components/schemas/Permission'
+        parent_role_id:
+          type: string
+          format: uuid
+        created_at:
+          type: string
+          format: date-time
+    
+    CreateRoleRequest:
+      type: object
+      required:
+        - name
+      properties:
+        name:
+          type: string
+        description:
+          type: string
+        permissions:
+          type: array
+          items:
+            $ref: '#/components/schemas/Permission'
+        parent_role_id:
+          type: string
+    
+    RoleListResponse:
+      type: object
+      properties:
+        data:
+          type: object
+          properties:
+            roles:
+              type: array
+              items:
+                $ref: '#/components/schemas/Role'
+    
+    UserRole:
+      type: object
+      properties:
+        user_id:
+          type: string
+        role_id:
+          type: string
+        resource_id:
+          type: string
+        granted_by:
+          type: string
+        granted_at:
+          type: string
+          format: date-time
+        expires_at:
+          type: string
+          format: date-time
+    
+    AssignRoleRequest:
+      type: object
+      required:
+        - role_id
+      properties:
+        role_id:
+          type: string
+        resource_id:
+          type: string
+        expires_at:
+          type: string
+          format: date-time
+    
+    UserRolesResponse:
+      type: object
+      properties:
+        data:
+          type: object
+          properties:
+            roles:
+              type: array
+              items:
+                $ref: '#/components/schemas/UserRole'
+    
+    Permission:
+      type: object
+      properties:
+        action:
+          type: string
+        resource_type:
+          type: string
+    
+    Relationship:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        subject:
+          $ref: '#/components/schemas/Entity'
+        relation:
+          type: string
+        object:
+          $ref: '#/components/schemas/Entity'
+        created_at:
+          type: string
+          format: date-time
+        created_by:
+          type: string
+    
+    CreateRelationshipRequest:
+      type: object
+      required:
+        - subject
+        - relation
+        - object
+      properties:
+        subject:
+          $ref: '#/components/schemas/Entity'
+        relation:
+          type: string
+        object:
+          $ref: '#/components/schemas/Entity'
+    
+    RelationshipListResponse:
+      type: object
+      properties:
+        data:
+          type: object
+          properties:
+            relationships:
+              type: array
+              items:
+                $ref: '#/components/schemas/Relationship'
+    
+    Entity:
+      type: object
+      required:
+        - type
+        - id
+      properties:
+        type:
+          type: string
+        id:
+          type: string
+    
+    AuditLog:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        timestamp:
+          type: string
+          format: date-time
+        user_id:
+          type: string
+        action:
+          type: string
+        resource:
+          type: object
+          properties:
+            type:
+              type: string
+            id:
+              type: string
+        decision:
+          type: string
+          enum: [allow, deny]
+        decision_reason:
+          type: string
+        ip_address:
+          type: string
+        user_agent:
+          type: string
+    
+    AuditLogListResponse:
+      type: object
+      properties:
+        data:
+          type: object
+          properties:
+            logs:
+              type: array
+              items:
+                $ref: '#/components/schemas/AuditLog'
+            pagination:
+              $ref: '#/components/schemas/Pagination'
+    
+    EvaluatedPolicy:
+      type: object
+      properties:
+        id:
+          type: string
+        name:
+          type: string
+        type:
+          type: string
+    
+    Obligation:
+      type: object
+      properties:
+        type:
+          type: string
+        parameters:
+          type: object
+          additionalProperties: true
+    
+    HealthResponse:
+      type: object
+      properties:
+        status:
+          type: string
+          enum: [healthy, unhealthy]
+        checks:
+          type: object
+          properties:
+            database:
+              type: string
+            cache:
+              type: string
+            message_queue:
+              type: string
+        version:
+          type: string
+        uptime:
+          type: integer
+    
+    MetricsResponse:
+      type: object
+      properties:
+        data:
+          type: object
+          properties:
+            authorization_requests:
+              type: object
+              properties:
+                total:
+                  type: integer
+                allowed:
+                  type: integer
+                denied:
+                  type: integer
+                error_rate:
+                  type: number
+            latency:
+              type: object
+              properties:
+                p50:
+                  type: number
+                p95:
+                  type: number
+                p99:
+                  type: number
+            active_policies:
+              type: integer
+            active_users:
+              type: integer
+    
+    Pagination:
+      type: object
+      properties:
+        page:
+          type: integer
+        limit:
+          type: integer
+        total:
+          type: integer
+        has_next:
+          type: boolean
+        has_previous:
+          type: boolean
+    
+    ResponseMetadata:
+      type: object
+      properties:
+        request_id:
+          type: string
+          format: uuid
+        processing_time_ms:
+          type: integer
+        timestamp:
+          type: string
+          format: date-time
+        version:
+          type: string
+    
+    ErrorResponse:
+      type: object
+      properties:
+        error:
+          type: object
+          properties:
+            code:
+              type: string
+            message:
+              type: string
+            details:
+              type: object
+              additionalProperties: true
+        metadata:
+          $ref: '#/components/schemas/ResponseMetadata'
+
+  responses:
+    BadRequest:
+      description: Bad request
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorResponse'
+    
+    Unauthorized:
+      description: Unauthorized
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorResponse'
+    
+    Forbidden:
+      description: Forbidden
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorResponse'
+    
+    NotFound:
+      description: Resource not found
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorResponse'
+    
+    Conflict:
+      description: Resource conflict
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorResponse'
+    
+    RateLimited:
+      description: Rate limit exceeded
+      headers:
+        X-RateLimit-Limit:
+          schema:
+            type: integer
+        X-RateLimit-Remaining:
+          schema:
+            type: integer
+        X-RateLimit-Reset:
+          schema:
+            type: integer
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorResponse'
+    
+    InternalError:
+      description: Internal server error
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorResponse'
