@@ -29,7 +29,7 @@
 - [x] 2.10 Implement AuditLog entity with partitioning
 - [x] 2.11 Create database indexes for performance
 - [x] 2.12 Add row-level security for multi-tenancy
-- [ ] 2.13 Write database integration tests using Testcontainers
+- [x] 2.13 Write database integration tests using Testcontainers
 
 ## 3. Authorization Core API
 
