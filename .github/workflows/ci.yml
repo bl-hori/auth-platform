@@ -6,6 +6,11 @@ on:
   pull_request:
     branches: [ main, develop ]
 
+permissions:
+  contents: read
+  checks: write
+  pull-requests: write
+
 env:
   JAVA_VERSION: '21'
   GRADLE_VERSION: '8.5'
@@ -113,13 +118,36 @@ jobs:
             backend/build/reports/jacoco/test/jacocoTestReport.xml
           retention-days: 30
 
-      - name: Comment test results on PR
-        uses: EnricoMi/publish-unit-test-result-action@v2
-        if: github.event_name == 'pull_request'
-        with:
-          files: backend/build/test-results/test/*.xml
-          check_name: Test Results
-          comment_mode: always
+      - name: Publish test summary
+        if: always()
+        run: |
+          echo "## Test Results 📊" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+
+          if [ -d "backend/build/test-results/test" ]; then
+            TOTAL=$(find backend/build/test-results/test -name "*.xml" -exec grep -h "tests=" {} \; | sed 's/.*tests="\([0-9]*\)".*/\1/' | awk '{s+=$1} END {print s}')
+            FAILURES=$(find backend/build/test-results/test -name "*.xml" -exec grep -h "failures=" {} \; | sed 's/.*failures="\([0-9]*\)".*/\1/' | awk '{s+=$1} END {print s}')
+            SKIPPED=$(find backend/build/test-results/test -name "*.xml" -exec grep -h "skipped=" {} \; | sed 's/.*skipped="\([0-9]*\)".*/\1/' | awk '{s+=$1} END {print s}')
+            PASSED=$((TOTAL - FAILURES - SKIPPED))
+
+            echo "| Metric | Count |" >> $GITHUB_STEP_SUMMARY
+            echo "|--------|-------|" >> $GITHUB_STEP_SUMMARY
+            echo "| ✅ Passed | $PASSED |" >> $GITHUB_STEP_SUMMARY
+            echo "| ❌ Failed | $FAILURES |" >> $GITHUB_STEP_SUMMARY
+            echo "| ⏭️ Skipped | $SKIPPED |" >> $GITHUB_STEP_SUMMARY
+            echo "| 📈 Total | $TOTAL |" >> $GITHUB_STEP_SUMMARY
+
+            if [ "$FAILURES" -gt 0 ]; then
+              echo "" >> $GITHUB_STEP_SUMMARY
+              echo "❌ **Tests failed!** Check the test results artifact for details." >> $GITHUB_STEP_SUMMARY
+              exit 1
+            else
+              echo "" >> $GITHUB_STEP_SUMMARY
+              echo "✅ **All tests passed!**" >> $GITHUB_STEP_SUMMARY
+            fi
+          else
+            echo "⚠️ No test results found" >> $GITHUB_STEP_SUMMARY
+          fi
 
   code-quality:
     name: Code Quality Checks
