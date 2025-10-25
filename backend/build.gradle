@@ -4,6 +4,7 @@ plugins {
     id 'io.spring.dependency-management' version '1.1.4'
     id 'checkstyle'
     id 'jacoco'
+    id 'org.owasp.dependencycheck' version '9.0.9'
 }
 
 group = 'io.authplatform'
@@ -106,4 +107,16 @@ checkstyleMain {
 
 checkstyleTest {
     source = 'src/test/java'
+}
+
+// OWASP Dependency Check configuration
+dependencyCheck {
+    format = 'HTML'
+    failBuildOnCVSS = 7
+    suppressionFile = "${rootDir}/config/dependency-check-suppressions.xml"
+    analyzers {
+        assemblyEnabled = false
+        nugetconfEnabled = false
+        nodeEnabled = false
+    }
 }
