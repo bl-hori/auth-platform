@@ -1,0 +1,48 @@
+spring:
+  datasource:
+    # Use separate test database
+    url: jdbc:postgresql://${DB_HOST:localhost}:${DB_PORT:5432}/${DB_NAME:authplatform_test}
+    username: ${DB_USER:authplatform}
+    password: ${DB_PASSWORD:authplatform}
+    driver-class-name: org.postgresql.Driver
+
+  jpa:
+    hibernate:
+      ddl-auto: validate
+    show-sql: false
+
+  flyway:
+    enabled: true
+    clean-disabled: false
+    clean-on-validation-error: true
+    baseline-on-migrate: true
+    locations: classpath:db/migration
+
+  # Disable Redis for tests
+  data:
+    redis:
+      repositories:
+        enabled: false
+
+  # Disable cache for tests
+  cache:
+    type: none
+
+# Test security configuration
+auth-platform:
+  security:
+    api-keys:
+      enabled: true
+      header-name: X-API-Key
+      keys:
+        test-key: test-org
+  opa:
+    url: http://localhost:8181
+    timeout-ms: 100
+
+# Disable actuator security for tests
+management:
+  endpoints:
+    web:
+      exposure:
+        include: '*'
