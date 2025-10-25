@@ -20,15 +20,15 @@
 - [x] 2.1 Create Flyway migration scripts for core schema
 - [x] 2.2 Implement Organization entity and repository
 - [x] 2.3 Implement User entity with soft delete support
-- [ ] 2.4 Implement Role entity with hierarchy support
-- [ ] 2.5 Implement Permission entity
-- [ ] 2.6 Implement UserRole join table with resource scoping
-- [ ] 2.7 Implement RolePermission join table
-- [ ] 2.8 Implement Policy entity with versioning
-- [ ] 2.9 Implement PolicyVersion entity
-- [ ] 2.10 Implement AuditLog entity with partitioning
-- [ ] 2.11 Create database indexes for performance
-- [ ] 2.12 Add row-level security for multi-tenancy
+- [x] 2.4 Implement Role entity with hierarchy support
+- [x] 2.5 Implement Permission entity
+- [x] 2.6 Implement UserRole join table with resource scoping
+- [x] 2.7 Implement RolePermission join table
+- [x] 2.8 Implement Policy entity with versioning
+- [x] 2.9 Implement PolicyVersion entity
+- [x] 2.10 Implement AuditLog entity with partitioning
+- [x] 2.11 Create database indexes for performance
+- [x] 2.12 Add row-level security for multi-tenancy
 - [ ] 2.13 Write database integration tests using Testcontainers
 
 ## 3. Authorization Core API
