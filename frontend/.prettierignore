@@ -1,0 +1,26 @@
+# dependencies
+node_modules
+.pnp
+.pnp.js
+
+# build outputs
+.next
+out
+build
+dist
+
+# misc
+.DS_Store
+*.pem
+
+# lock files
+pnpm-lock.yaml
+package-lock.json
+yarn.lock
+
+# env files
+.env*
+
+# IDE
+.vscode
+.idea
