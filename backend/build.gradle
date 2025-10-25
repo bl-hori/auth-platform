@@ -128,11 +128,21 @@ sonar {
         property "sonar.projectKey", "auth-platform"
         property "sonar.projectName", "Auth Platform"
         property "sonar.projectVersion", "${version}"
-        property "sonar.host.url", System.getenv("SONAR_HOST_URL") ?: "http://localhost:9000"
 
-        // SonarCloud organization (required for SonarCloud)
-        if (System.getenv("SONAR_ORGANIZATION")) {
-            property "sonar.organization", System.getenv("SONAR_ORGANIZATION")
+        def sonarHostUrl = System.getenv("SONAR_HOST_URL") ?: "http://localhost:9000"
+        property "sonar.host.url", sonarHostUrl
+
+        // SonarCloud organization (required for SonarCloud, optional for self-hosted)
+        // Detect SonarCloud by checking if host URL contains sonarcloud.io
+        def isSonarCloud = sonarHostUrl.contains("sonarcloud.io")
+        def sonarOrg = System.getenv("SONAR_ORGANIZATION")
+
+        if (sonarOrg) {
+            property "sonar.organization", sonarOrg
+        } else if (isSonarCloud) {
+            // For SonarCloud, try to use a default organization based on project key
+            // Users should set SONAR_ORGANIZATION secret for proper configuration
+            logger.warn("⚠️  SONAR_ORGANIZATION not set for SonarCloud. Please configure it in GitHub Secrets.")
         }
 
         property "sonar.sources", "src/main/java"

@@ -73,27 +73,42 @@ The project is configured to run SonarQube analysis in GitHub Actions automatica
 
 Configure these secrets in your repository settings:
 
-1. **SONAR_TOKEN**
+1. **SONAR_TOKEN** (Required)
    - Your SonarQube authentication token
    - Generate in: User → My Account → Security → Generate Token
 
-2. **SONAR_HOST_URL**
+2. **SONAR_HOST_URL** (Required)
    - Your SonarQube server URL
    - Examples:
      - SonarCloud: `https://sonarcloud.io`
      - Local: `http://your-server:9000`
      - Self-hosted: `https://sonar.yourcompany.com`
 
+3. **SONAR_ORGANIZATION** (Required for SonarCloud only)
+   - Your SonarCloud organization key
+   - Find in: SonarCloud → Your Organization → Information → Organization Key
+   - **Not needed** for self-hosted SonarQube servers
+
 #### How to Set Secrets
 
 ```bash
 # Using GitHub CLI
+
+# For SonarCloud:
 gh secret set SONAR_TOKEN -b"your_token_here"
 gh secret set SONAR_HOST_URL -b"https://sonarcloud.io"
+gh secret set SONAR_ORGANIZATION -b"your-org-key"
+
+# For self-hosted SonarQube:
+gh secret set SONAR_TOKEN -b"your_token_here"
+gh secret set SONAR_HOST_URL -b"https://sonar.yourcompany.com"
+# SONAR_ORGANIZATION is not needed
 
 # Or via GitHub Web UI:
 # Settings → Secrets and variables → Actions → New repository secret
 ```
+
+**Note**: The CI/CD pipeline will automatically detect if you're using SonarCloud (by checking if the URL contains `sonarcloud.io`) and will skip the scan with a warning if `SONAR_ORGANIZATION` is not set. For self-hosted SonarQube, the organization setting is optional.
 
 ## Configuration Files
 

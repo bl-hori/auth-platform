@@ -194,16 +194,38 @@ jobs:
           SONAR_ORGANIZATION: ${{ secrets.SONAR_ORGANIZATION }}
         run: |
           if [ -n "$SONAR_TOKEN" ] && [ -n "$SONAR_HOST_URL" ]; then
+            echo "🔍 Running SonarQube analysis..."
+            echo "Host: $SONAR_HOST_URL"
+
+            # Check if using SonarCloud
+            if [[ "$SONAR_HOST_URL" == *"sonarcloud.io"* ]]; then
+              if [ -z "$SONAR_ORGANIZATION" ]; then
+                echo "⚠️ WARNING: SonarCloud detected but SONAR_ORGANIZATION is not set"
+                echo "SonarCloud requires an organization. Please set SONAR_ORGANIZATION secret."
+                echo "Skipping SonarQube scan to avoid failure."
+                exit 0
+              else
+                echo "Organization: $SONAR_ORGANIZATION"
+              fi
+            fi
+
             ./gradlew sonar \
               -Dsonar.token=$SONAR_TOKEN \
               -Dsonar.host.url=$SONAR_HOST_URL \
               --no-daemon
+
+            echo "✅ SonarQube analysis completed successfully"
           else
             echo "⚠️ SonarQube scan skipped: SONAR_TOKEN or SONAR_HOST_URL not configured"
+            echo ""
             echo "To enable SonarQube analysis, set the following secrets in your repository:"
             echo "  - SONAR_TOKEN: Your SonarQube authentication token"
-            echo "  - SONAR_HOST_URL: Your SonarQube server URL (e.g., https://sonarcloud.io)"
-            echo "  - SONAR_ORGANIZATION: Your SonarCloud organization key (required for SonarCloud)"
+            echo "  - SONAR_HOST_URL: Your SonarQube server URL"
+            echo "    • For SonarCloud: https://sonarcloud.io"
+            echo "    • For self-hosted: https://your-sonarqube-server.com"
+            echo ""
+            echo "For SonarCloud, also set:"
+            echo "  - SONAR_ORGANIZATION: Your SonarCloud organization key"
           fi
         continue-on-error: true
 
