@@ -20,6 +20,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 @SpringBootTest
 @AutoConfigureMockMvc
 @DisplayName("Security Configuration Integration Tests")
+@org.springframework.test.context.ActiveProfiles("test")
 class SecurityConfigIntegrationTest {
 
     @Autowired
