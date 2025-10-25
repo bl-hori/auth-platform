@@ -125,7 +125,7 @@ dependencyCheck {
 // SonarQube configuration
 sonar {
     properties {
-        property "sonar.projectKey", "auth-platform"
+        property "sonar.projectKey", "bl-hori_auth-platform"
         property "sonar.projectName", "Auth Platform"
         property "sonar.projectVersion", "${version}"
 
