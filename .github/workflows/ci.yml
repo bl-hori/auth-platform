@@ -191,6 +191,7 @@ jobs:
         env:
           SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
           SONAR_HOST_URL: ${{ secrets.SONAR_HOST_URL }}
+          SONAR_ORGANIZATION: ${{ secrets.SONAR_ORGANIZATION }}
         run: |
           if [ -n "$SONAR_TOKEN" ] && [ -n "$SONAR_HOST_URL" ]; then
             ./gradlew sonar \
@@ -202,6 +203,7 @@ jobs:
             echo "To enable SonarQube analysis, set the following secrets in your repository:"
             echo "  - SONAR_TOKEN: Your SonarQube authentication token"
             echo "  - SONAR_HOST_URL: Your SonarQube server URL (e.g., https://sonarcloud.io)"
+            echo "  - SONAR_ORGANIZATION: Your SonarCloud organization key (required for SonarCloud)"
           fi
         continue-on-error: true
 
