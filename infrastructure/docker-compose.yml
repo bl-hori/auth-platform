@@ -1,0 +1,66 @@
+version: '3.8'
+
+services:
+  postgres:
+    image: postgres:15-alpine
+    container_name: authplatform-postgres
+    environment:
+      POSTGRES_DB: authplatform
+      POSTGRES_USER: authplatform
+      POSTGRES_PASSWORD: authplatform
+      PGDATA: /var/lib/postgresql/data/pgdata
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres-data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U authplatform"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - authplatform
+
+  redis:
+    image: redis:7-alpine
+    container_name: authplatform-redis
+    command: redis-server --appendonly yes
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis-data:/data
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 3s
+      retries: 5
+    networks:
+      - authplatform
+
+  opa:
+    image: openpolicyagent/opa:0.60.0
+    container_name: authplatform-opa
+    command:
+      - "run"
+      - "--server"
+      - "--log-level=debug"
+      - "--log-format=json"
+    ports:
+      - "8181:8181"
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8181/health"]
+      interval: 10s
+      timeout: 3s
+      retries: 5
+    networks:
+      - authplatform
+
+volumes:
+  postgres-data:
+    driver: local
+  redis-data:
+    driver: local
+
+networks:
+  authplatform:
+    driver: bridge
