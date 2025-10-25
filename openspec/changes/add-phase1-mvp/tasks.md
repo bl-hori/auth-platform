@@ -2,12 +2,12 @@
 
 ## 1. Project Setup & Infrastructure
 
-- [ ] 1.1 Initialize Spring Boot 3 project with Java 21
-- [ ] 1.2 Configure project structure (multi-module Gradle build)
-- [ ] 1.3 Set up PostgreSQL 15 with Docker Compose for development
-- [ ] 1.4 Set up Redis 7 for caching layer
-- [ ] 1.5 Configure Spring Security with API key authentication
-- [ ] 1.6 Set up CI/CD pipeline (GitHub Actions)
+- [x] 1.1 Initialize Spring Boot 3 project with Java 21
+- [x] 1.2 Configure project structure (multi-module Gradle build)
+- [x] 1.3 Set up PostgreSQL 15 with Docker Compose for development
+- [x] 1.4 Set up Redis 7 for caching layer
+- [x] 1.5 Configure Spring Security with API key authentication
+- [x] 1.6 Set up CI/CD pipeline (GitHub Actions)
 - [ ] 1.7 Configure SonarQube for code quality
 - [ ] 1.8 Set up Docker multi-stage builds for backend
 - [ ] 1.9 Initialize Next.js 15 project with TypeScript
