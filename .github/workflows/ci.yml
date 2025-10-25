@@ -156,6 +156,8 @@ jobs:
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
+        with:
+          fetch-depth: 0  # Shallow clones should be disabled for better SonarQube analysis
 
       - name: Set up JDK 21
         uses: actions/setup-java@v4
@@ -167,9 +169,40 @@ jobs:
       - name: Grant execute permission for gradlew
         run: chmod +x backend/gradlew
 
+      - name: Cache SonarQube packages
+        uses: actions/cache@v4
+        with:
+          path: ~/.sonar/cache
+          key: ${{ runner.os }}-sonar
+          restore-keys: ${{ runner.os }}-sonar
+
       - name: Run Checkstyle
         working-directory: backend
         run: ./gradlew checkstyleMain checkstyleTest --no-daemon
+        continue-on-error: true
+
+      - name: Run tests and generate coverage
+        working-directory: backend
+        run: ./gradlew test jacocoTestReport --no-daemon
+        continue-on-error: true
+
+      - name: SonarQube Scan
+        working-directory: backend
+        env:
+          SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
+          SONAR_HOST_URL: ${{ secrets.SONAR_HOST_URL }}
+        run: |
+          if [ -n "$SONAR_TOKEN" ] && [ -n "$SONAR_HOST_URL" ]; then
+            ./gradlew sonar \
+              -Dsonar.token=$SONAR_TOKEN \
+              -Dsonar.host.url=$SONAR_HOST_URL \
+              --no-daemon
+          else
+            echo "⚠️ SonarQube scan skipped: SONAR_TOKEN or SONAR_HOST_URL not configured"
+            echo "To enable SonarQube analysis, set the following secrets in your repository:"
+            echo "  - SONAR_TOKEN: Your SonarQube authentication token"
+            echo "  - SONAR_HOST_URL: Your SonarQube server URL (e.g., https://sonarcloud.io)"
+          fi
         continue-on-error: true
 
       - name: Upload Checkstyle reports
