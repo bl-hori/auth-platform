@@ -95,10 +95,17 @@ logging:
     file: "%d{yyyy-MM-dd HH:mm:ss} [%thread] %-5level %logger{36} - %msg%n"
 
 # Application-specific configuration
-authplatform:
+auth-platform:
   security:
-    api-key:
+    api-keys:
+      enabled: true
       header-name: X-API-Key
+      # Development keys (DO NOT use in production)
+      # In production, use environment variables or secrets management
+      keys:
+        dev-key-org1-abc123: org-1
+        dev-key-org2-def456: org-2
+        test-key-xyz789: test-org
   opa:
     url: ${OPA_URL:http://localhost:8181}
     timeout-ms: 100
