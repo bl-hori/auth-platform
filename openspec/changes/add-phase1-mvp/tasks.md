@@ -18,8 +18,8 @@
 ## 2. Database Schema & Persistence
 
 - [x] 2.1 Create Flyway migration scripts for core schema
-- [ ] 2.2 Implement Organization entity and repository
-- [ ] 2.3 Implement User entity with soft delete support
+- [x] 2.2 Implement Organization entity and repository
+- [x] 2.3 Implement User entity with soft delete support
 - [ ] 2.4 Implement Role entity with hierarchy support
 - [ ] 2.5 Implement Permission entity
 - [ ] 2.6 Implement UserRole join table with resource scoping
