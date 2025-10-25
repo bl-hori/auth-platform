@@ -24,6 +24,7 @@ import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.*;
+import static org.mockito.Mockito.lenient;
 
 /**
  * Unit tests for {@link RbacAuthorizationService}.
@@ -47,6 +48,9 @@ class RbacAuthorizationServiceTest {
     @Mock
     private RolePermissionRepository rolePermissionRepository;
 
+    @Mock
+    private io.authplatform.platform.config.OpaProperties opaProperties;
+
     @InjectMocks
     private RbacAuthorizationService authorizationService;
 
@@ -57,6 +61,9 @@ class RbacAuthorizationServiceTest {
 
     @BeforeEach
     void setUp() {
+        // Disable OPA for tests (use RBAC only)
+        lenient().when(opaProperties.isEnabled()).thenReturn(false);
+
         // Create test organization
         testOrg = Organization.builder()
                 .id(UUID.randomUUID())
