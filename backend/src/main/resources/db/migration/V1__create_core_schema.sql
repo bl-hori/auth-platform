@@ -243,7 +243,7 @@ CREATE TABLE audit_logs (
     decision_reason TEXT,
     request_data JSONB,
     response_data JSONB,
-    ip_address INET,
+    ip_address VARCHAR(50),
     user_agent TEXT,
     timestamp TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT CURRENT_TIMESTAMP,
 
@@ -261,7 +261,7 @@ COMMENT ON TABLE audit_logs IS 'Comprehensive audit trail for all authorization 
 COMMENT ON COLUMN audit_logs.event_type IS 'Type of event: authorization, admin_action, policy_change, etc.';
 COMMENT ON COLUMN audit_logs.decision IS 'Authorization decision: allow, deny, error';
 
--- Create initial partitions for audit logs (current month + next 2 months)
+-- Create initial partitions for audit logs (full year 2025)
 CREATE TABLE audit_logs_2025_01 PARTITION OF audit_logs
     FOR VALUES FROM ('2025-01-01') TO ('2025-02-01');
 
@@ -270,6 +270,33 @@ CREATE TABLE audit_logs_2025_02 PARTITION OF audit_logs
 
 CREATE TABLE audit_logs_2025_03 PARTITION OF audit_logs
     FOR VALUES FROM ('2025-03-01') TO ('2025-04-01');
+
+CREATE TABLE audit_logs_2025_04 PARTITION OF audit_logs
+    FOR VALUES FROM ('2025-04-01') TO ('2025-05-01');
+
+CREATE TABLE audit_logs_2025_05 PARTITION OF audit_logs
+    FOR VALUES FROM ('2025-05-01') TO ('2025-06-01');
+
+CREATE TABLE audit_logs_2025_06 PARTITION OF audit_logs
+    FOR VALUES FROM ('2025-06-01') TO ('2025-07-01');
+
+CREATE TABLE audit_logs_2025_07 PARTITION OF audit_logs
+    FOR VALUES FROM ('2025-07-01') TO ('2025-08-01');
+
+CREATE TABLE audit_logs_2025_08 PARTITION OF audit_logs
+    FOR VALUES FROM ('2025-08-01') TO ('2025-09-01');
+
+CREATE TABLE audit_logs_2025_09 PARTITION OF audit_logs
+    FOR VALUES FROM ('2025-09-01') TO ('2025-10-01');
+
+CREATE TABLE audit_logs_2025_10 PARTITION OF audit_logs
+    FOR VALUES FROM ('2025-10-01') TO ('2025-11-01');
+
+CREATE TABLE audit_logs_2025_11 PARTITION OF audit_logs
+    FOR VALUES FROM ('2025-11-01') TO ('2025-12-01');
+
+CREATE TABLE audit_logs_2025_12 PARTITION OF audit_logs
+    FOR VALUES FROM ('2025-12-01') TO ('2026-01-01');
 
 -- ============================================================================
 -- Functions and Triggers
