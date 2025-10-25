@@ -1,9 +1,9 @@
 spring:
   datasource:
     # Use separate test database
-    url: jdbc:postgresql://localhost:5432/authplatform_test
-    username: authplatform
-    password: authplatform
+    url: jdbc:postgresql://${DB_HOST:localhost}:${DB_PORT:5432}/${DB_NAME:authplatform_test}
+    username: ${DB_USER:authplatform}
+    password: ${DB_PASSWORD:authplatform}
     driver-class-name: org.postgresql.Driver
 
   jpa:
