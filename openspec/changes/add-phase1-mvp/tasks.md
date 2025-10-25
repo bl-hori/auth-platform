@@ -13,7 +13,7 @@
 - [x] 1.9 Initialize Next.js 15 project with TypeScript
 - [x] 1.10 Configure Tailwind CSS and shadcn/ui components
 - [x] 1.11 Set up frontend development environment with hot reload
-- [ ] 1.12 Configure ESLint and Prettier for frontend
+- [x] 1.12 Configure ESLint and Prettier for frontend
 
 ## 2. Database Schema & Persistence
 
