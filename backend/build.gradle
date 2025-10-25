@@ -34,17 +34,16 @@ dependencies {
     implementation 'org.springframework.boot:spring-boot-starter-data-redis'
 
     // Database
-    implementation 'org.postgresql:postgresql'
+    runtimeOnly 'org.postgresql:postgresql'
     implementation 'org.flywaydb:flyway-core'
-    implementation 'org.flywaydb:flyway-database-postgresql'
 
     // Caching
     implementation 'com.github.ben-manes.caffeine:caffeine:3.1.8'
     implementation 'io.lettuce:lettuce-core'
 
     // Rate Limiting
-    implementation 'com.github.vladimir-bukhtoyarov:bucket4j-core:8.7.0'
-    implementation 'com.github.vladimir-bukhtoyarov:bucket4j-redis:8.7.0'
+    implementation 'com.bucket4j:bucket4j-core:8.10.1'
+    implementation 'com.bucket4j:bucket4j-redis:8.10.1'
 
     // Metrics & Monitoring
     implementation 'io.micrometer:micrometer-registry-prometheus'

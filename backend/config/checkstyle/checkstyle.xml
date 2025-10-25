@@ -79,6 +79,12 @@
         <module name="HideUtilityClassConstructor"/>
         <module name="InterfaceIsType"/>
 
+        <!-- Suppress checks for Spring Boot application classes -->
+        <module name="SuppressionXpathSingleFilter">
+            <property name="checks" value="HideUtilityClassConstructor"/>
+            <property name="query" value="//CLASS_DEF[./MODIFIERS/ANNOTATION/IDENT[@text='SpringBootApplication']]"/>
+        </module>
+
         <!-- Miscellaneous -->
         <module name="ArrayTypeStyle"/>
         <module name="TodoComment">
