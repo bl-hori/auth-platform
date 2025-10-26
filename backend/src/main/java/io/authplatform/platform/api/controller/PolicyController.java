@@ -2,6 +2,7 @@ package io.authplatform.platform.api.controller;
 
 import io.authplatform.platform.api.dto.policy.*;
 import io.authplatform.platform.api.security.CurrentOrganizationId;
+import io.authplatform.platform.audit.Audited;
 import io.authplatform.platform.domain.entity.PolicyVersion;
 import io.authplatform.platform.service.PolicyService;
 import io.swagger.v3.oas.annotations.Operation;
@@ -58,6 +59,11 @@ public class PolicyController {
      * @return the created policy
      */
     @PostMapping
+    @Audited(
+            action = "CREATE_POLICY",
+            resourceType = "Policy",
+            resourceIdExpression = "#result.body.id"
+    )
     @Operation(
             summary = "Create a new policy",
             description = "Creates a new policy in DRAFT status. The Rego code is validated before creation."

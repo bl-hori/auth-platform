@@ -321,4 +321,47 @@ public class AuditLogServiceImpl implements AuditLogService {
         }
         return value;
     }
+
+    @Override
+    @Async
+    @Transactional
+    public void logAdministrativeAction(
+            UUID organizationId,
+            UUID actorId,
+            String resourceType,
+            String resourceId,
+            String action,
+            String decision,
+            String decisionReason,
+            String ipAddress,
+            String userAgent) {
+        log.debug("Logging administrative action: actor={}, resource={}:{}, action={}, decision={}",
+                actorId, resourceType, resourceId, action, decision);
+
+        Organization organization = organizationRepository.findById(organizationId)
+                .orElse(null);
+        if (organization == null) {
+            log.warn("Organization not found for audit log: {}", organizationId);
+            return;
+        }
+
+        User actor = actorId != null ? userRepository.findById(actorId).orElse(null) : null;
+
+        AuditLog auditLog = AuditLog.builder()
+                .organization(organization)
+                .eventType("administrative_action")
+                .actor(actor)
+                .actorEmail(actor != null ? actor.getEmail() : null)
+                .resourceType(resourceType)
+                .resourceId(resourceId)
+                .action(action)
+                .decision(decision)
+                .decisionReason(decisionReason)
+                .ipAddress(ipAddress)
+                .userAgent(userAgent)
+                .build();
+
+        auditLogRepository.save(auditLog);
+        log.debug("Administrative action logged: id={}, decision={}", auditLog.getId(), decision);
+    }
 }
