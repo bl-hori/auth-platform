@@ -145,9 +145,10 @@ export function AuthProvider({ children }: AuthProviderProps) {
 
       // For development, we'll create a mock user and organization
       // In production, this should fetch from the backend
+      // Using the system organization UUID from backend
       const mockUser: User = {
-        id: 'user-001',
-        organizationId: 'org-001',
+        id: '00000000-0000-0000-0000-000000000001',
+        organizationId: '00000000-0000-0000-0000-000000000000',
         email: 'admin@example.com',
         username: 'admin',
         displayName: 'Admin User',
@@ -157,7 +158,7 @@ export function AuthProvider({ children }: AuthProviderProps) {
       }
 
       const mockOrganization: Organization = {
-        id: 'org-001',
+        id: '00000000-0000-0000-0000-000000000000',
         name: 'default',
         displayName: 'Default Organization',
         status: OrganizationStatus.ACTIVE,
