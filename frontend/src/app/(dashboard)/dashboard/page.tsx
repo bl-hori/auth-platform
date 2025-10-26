@@ -8,8 +8,6 @@
 
 import { Users, Shield, FileText, Activity } from 'lucide-react'
 
-import { ProtectedRoute } from '@/components/auth/protected-route'
-import { DashboardLayout } from '@/components/layout/dashboard-layout'
 import {
   Card,
   CardContent,
@@ -51,17 +49,15 @@ function StatCard({
  */
 export default function DashboardPage() {
   return (
-    <ProtectedRoute>
-      <DashboardLayout>
-        <div className="space-y-6">
-          <div>
-            <h1 className="text-3xl font-bold tracking-tight">
-              ダッシュボード
-            </h1>
-            <p className="text-muted-foreground">
-              Auth Platform の概要と統計情報を確認できます
-            </p>
-          </div>
+    <div className="space-y-6">
+      <div>
+        <h1 className="text-3xl font-bold tracking-tight">
+          ダッシュボード
+        </h1>
+        <p className="text-muted-foreground">
+          Auth Platform の概要と統計情報を確認できます
+        </p>
+      </div>
 
           {/* Statistics Grid */}
           <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
@@ -166,7 +162,5 @@ export default function DashboardPage() {
             </CardContent>
           </Card>
         </div>
-      </DashboardLayout>
-    </ProtectedRoute>
   )
 }
