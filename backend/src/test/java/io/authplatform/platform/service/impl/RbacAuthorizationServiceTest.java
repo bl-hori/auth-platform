@@ -427,6 +427,193 @@ class RbacAuthorizationServiceTest {
     }
 
     @Test
+    @DisplayName("Should use cache when available")
+    void shouldUseCacheWhenAvailable() {
+        // Given: Cached response
+        AuthorizationResponse cachedResponse = AuthorizationResponse.builder()
+                .decision(AuthorizationResponse.Decision.ALLOW)
+                .reason("Cached decision")
+                .evaluationTimeMs(0L)
+                .build();
+
+        when(cacheService.get(any())).thenReturn(Optional.of(cachedResponse));
+
+        AuthorizationRequest request = AuthorizationRequest.builder()
+                .organizationId(testOrg.getId())
+                .principal(AuthorizationRequest.Principal.builder()
+                        .id("user-123")
+                        .type("user")
+                        .build())
+                .action("read")
+                .resource(AuthorizationRequest.Resource.builder()
+                        .type("document")
+                        .id("doc-456")
+                        .build())
+                .build();
+
+        // When: Authorize
+        AuthorizationResponse response = authorizationService.authorize(request);
+
+        // Then: Should return cached response without hitting database
+        assertThat(response.getDecision()).isEqualTo(AuthorizationResponse.Decision.ALLOW);
+        assertThat(response.getReason()).isEqualTo("Cached decision");
+        verify(userRepository, never()).findByExternalIdAndDeletedAtIsNull(anyString());
+        verify(cacheService).get(any());
+    }
+
+    @Test
+    @DisplayName("Should cache authorization decisions")
+    void shouldCacheAuthorizationDecisions() {
+        // Given: User with permission
+        RolePermission rolePermission = RolePermission.builder()
+                .id(UUID.randomUUID())
+                .role(viewerRole)
+                .permission(readPermission)
+                .build();
+
+        UserRole userRole = UserRole.builder()
+                .id(UUID.randomUUID())
+                .user(testUser)
+                .role(viewerRole)
+                .build();
+
+        when(userRepository.findByExternalIdAndDeletedAtIsNull("user-123"))
+                .thenReturn(Optional.of(testUser));
+        when(userRoleRepository.findNonExpiredByUserId(eq(testUser.getId()), any()))
+                .thenReturn(List.of(userRole));
+        when(rolePermissionRepository.findByRoleId(viewerRole.getId()))
+                .thenReturn(List.of(rolePermission));
+
+        AuthorizationRequest request = AuthorizationRequest.builder()
+                .organizationId(testOrg.getId())
+                .principal(AuthorizationRequest.Principal.builder()
+                        .id("user-123")
+                        .type("user")
+                        .build())
+                .action("read")
+                .resource(AuthorizationRequest.Resource.builder()
+                        .type("document")
+                        .id("doc-456")
+                        .build())
+                .build();
+
+        // When: Authorize
+        authorizationService.authorize(request);
+
+        // Then: Should cache the result
+        verify(cacheService).put(any(), any());
+    }
+
+    @Test
+    @DisplayName("Should invalidate cache for principal")
+    void shouldInvalidateCacheForPrincipal() {
+        // Given: Organization and principal IDs
+        UUID orgId = UUID.randomUUID();
+        String principalId = "user-123";
+
+        // When: Invalidate cache
+        authorizationService.invalidateCache(orgId, principalId);
+
+        // Then: Should call cache service
+        verify(cacheService).invalidate(orgId, principalId);
+    }
+
+    @Test
+    @DisplayName("Should invalidate cache for organization")
+    void shouldInvalidateCacheForOrganization() {
+        // Given: Organization ID
+        UUID orgId = UUID.randomUUID();
+
+        // When: Invalidate cache for organization
+        authorizationService.invalidateCacheForOrganization(orgId);
+
+        // Then: Should call cache service
+        verify(cacheService).invalidateOrganization(orgId);
+    }
+
+    @Test
+    @DisplayName("Should handle async authorization")
+    void shouldHandleAsyncAuthorization() throws Exception {
+        // Given: User with permission
+        RolePermission rolePermission = RolePermission.builder()
+                .id(UUID.randomUUID())
+                .role(viewerRole)
+                .permission(readPermission)
+                .build();
+
+        UserRole userRole = UserRole.builder()
+                .id(UUID.randomUUID())
+                .user(testUser)
+                .role(viewerRole)
+                .build();
+
+        when(userRepository.findByExternalIdAndDeletedAtIsNull("user-123"))
+                .thenReturn(Optional.of(testUser));
+        when(userRoleRepository.findNonExpiredByUserId(eq(testUser.getId()), any()))
+                .thenReturn(List.of(userRole));
+        when(rolePermissionRepository.findByRoleId(viewerRole.getId()))
+                .thenReturn(List.of(rolePermission));
+
+        AuthorizationRequest request = AuthorizationRequest.builder()
+                .organizationId(testOrg.getId())
+                .principal(AuthorizationRequest.Principal.builder()
+                        .id("user-123")
+                        .type("user")
+                        .build())
+                .action("read")
+                .resource(AuthorizationRequest.Resource.builder()
+                        .type("document")
+                        .id("doc-456")
+                        .build())
+                .build();
+
+        // When: Authorize asynchronously
+        var future = authorizationService.authorizeAsync(request);
+        AuthorizationResponse response = future.get();
+
+        // Then: Should allow access
+        assertThat(response.getDecision()).isEqualTo(AuthorizationResponse.Decision.ALLOW);
+        assertThat(response.getReason()).contains("permission via roles");
+    }
+
+    @Test
+    @DisplayName("Should deny when user is inactive")
+    void shouldDenyWhenUserIsInactive() {
+        // Given: Inactive user
+        User inactiveUser = User.builder()
+                .id(UUID.randomUUID())
+                .organization(testOrg)
+                .email("inactive@example.com")
+                .username("inactiveuser")
+                .externalId("user-inactive")
+                .status(User.UserStatus.INACTIVE)
+                .build();
+
+        when(userRepository.findByExternalIdAndDeletedAtIsNull("user-inactive"))
+                .thenReturn(Optional.of(inactiveUser));
+
+        AuthorizationRequest request = AuthorizationRequest.builder()
+                .organizationId(testOrg.getId())
+                .principal(AuthorizationRequest.Principal.builder()
+                        .id("user-inactive")
+                        .type("user")
+                        .build())
+                .action("read")
+                .resource(AuthorizationRequest.Resource.builder()
+                        .type("document")
+                        .id("doc-456")
+                        .build())
+                .build();
+
+        // When: Authorize
+        AuthorizationResponse response = authorizationService.authorize(request);
+
+        // Then: Should deny access (inactive users typically have no roles)
+        assertThat(response.getDecision()).isEqualTo(AuthorizationResponse.Decision.DENY);
+        assertThat(response.getReason()).contains("no roles");
+    }
+
+    @Test
     @DisplayName("Should track statistics")
     void shouldTrackStatistics() {
         // Given: Multiple authorization requests
