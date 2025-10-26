@@ -7,6 +7,7 @@ import io.authplatform.platform.api.dto.UserUpdateRequest;
 import io.authplatform.platform.domain.entity.Organization;
 import io.authplatform.platform.domain.entity.User;
 import io.authplatform.platform.domain.repository.OrganizationRepository;
+import io.authplatform.platform.domain.repository.UserRepository;
 import io.authplatform.platform.domain.repository.RoleRepository;
 import io.authplatform.platform.domain.repository.UserRepository;
 import io.authplatform.platform.domain.repository.UserRoleRepository;
@@ -57,6 +58,7 @@ class UserServiceImplTest {
 
     @BeforeEach
     void setUp() {
+        userService = new UserServiceImpl(userRepository, organizationRepository);
         userService = new UserServiceImpl(userRepository, organizationRepository, roleRepository, userRoleRepository);
 
         orgId = UUID.randomUUID();

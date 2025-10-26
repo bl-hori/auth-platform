@@ -3,6 +3,9 @@ package io.authplatform.platform.service;
 import io.authplatform.platform.api.dto.UserCreateRequest;
 import io.authplatform.platform.api.dto.UserListResponse;
 import io.authplatform.platform.api.dto.UserResponse;
+import io.authplatform.platform.api.dto.UserUpdateRequest;
+import org.springframework.data.domain.Pageable;
+
 import io.authplatform.platform.api.dto.UserRoleAssignRequest;
 import io.authplatform.platform.api.dto.UserRoleResponse;
 import io.authplatform.platform.api.dto.UserUpdateRequest;
