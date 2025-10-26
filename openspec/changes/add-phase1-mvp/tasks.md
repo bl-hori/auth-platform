@@ -39,7 +39,7 @@
 - [x] 3.4 Integrate OPA (Open Policy Agent) via REST API
 - [x] 3.5 Implement multi-layer caching (Caffeine L1 + Redis L2)
 - [x] 3.6 Implement cache invalidation on policy/role changes
-- [ ] 3.7 Create REST endpoint POST /v1/authorize
+- [x] 3.7 Create REST endpoint POST /v1/authorize
 - [ ] 3.8 Create REST endpoint POST /v1/authorize/batch
 - [ ] 3.9 Implement rate limiting using Bucket4j
 - [ ] 3.10 Add Prometheus metrics for authorization requests
