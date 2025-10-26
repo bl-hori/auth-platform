@@ -106,6 +106,14 @@ auth-platform:
         dev-key-org1-abc123: org-1
         dev-key-org2-def456: org-2
         test-key-xyz789: test-org
+
+  # Rate Limiting Configuration
+  rate-limit:
+    enabled: true
+    capacity: 100          # Maximum burst capacity (tokens in bucket)
+    refill-tokens: 100     # Tokens added per refill period
+    refill-period: 1m      # Refill period (Duration format: 1m, 1s, 1h, etc.)
+
 # OPA (Open Policy Agent) Configuration
 opa:
   enabled: ${OPA_ENABLED:false}

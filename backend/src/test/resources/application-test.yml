@@ -36,6 +36,11 @@ auth-platform:
       header-name: X-API-Key
       keys:
         test-key: test-org
+  rate-limit:
+    enabled: false  # Disable rate limiting in tests by default
+    capacity: 10
+    refill-tokens: 10
+    refill-period: 1m
   opa:
     url: http://localhost:8181
     timeout-ms: 100

@@ -1,6 +1,7 @@
 package io.authplatform.platform.config;
 
 import io.authplatform.platform.security.ApiKeyAuthenticationFilter;
+import io.authplatform.platform.security.RateLimitFilter;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.security.config.annotation.method.configuration.EnableMethodSecurity;
@@ -39,14 +40,17 @@ import org.springframework.security.web.authentication.UsernamePasswordAuthentic
 public class SecurityConfig {
 
     private final ApiKeyProperties apiKeyProperties;
+    private final RateLimitFilter rateLimitFilter;
 
     /**
      * Constructs the security configuration.
      *
      * @param apiKeyProperties API key configuration properties
+     * @param rateLimitFilter  Rate limit filter
      */
-    public SecurityConfig(ApiKeyProperties apiKeyProperties) {
+    public SecurityConfig(ApiKeyProperties apiKeyProperties, RateLimitFilter rateLimitFilter) {
         this.apiKeyProperties = apiKeyProperties;
+        this.rateLimitFilter = rateLimitFilter;
     }
 
     /**
@@ -93,10 +97,16 @@ public class SecurityConfig {
                 .sessionCreationPolicy(SessionCreationPolicy.STATELESS)
             )
 
-            // Add API key authentication filter before username/password filter
+            // Add rate limit filter before authentication
             .addFilterBefore(
-                apiKeyAuthenticationFilter(),
+                rateLimitFilter,
                 UsernamePasswordAuthenticationFilter.class
+            )
+
+            // Add API key authentication filter after rate limiting
+            .addFilterAfter(
+                apiKeyAuthenticationFilter(),
+                RateLimitFilter.class
             )
 
             // Disable form login and HTTP basic auth (API key only)
