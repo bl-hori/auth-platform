@@ -42,8 +42,8 @@ test.describe('Basic Authentication', () => {
     // Try to submit without entering API key
     await page.click('button[type="submit"]');
 
-    // Should show error message in alert
-    const errorAlert = page.getByRole('alert');
+    // Should show error message - use data-testid to avoid Next.js route announcer
+    const errorAlert = page.getByTestId('error-message');
     await expect(errorAlert).toBeVisible({ timeout: 5000 });
     await expect(errorAlert).toContainText('APIキーを入力してください');
   });
