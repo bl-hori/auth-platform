@@ -108,14 +108,14 @@
 
 ## 8. Frontend - User Management UI
 
-- [ ] 8.1 Create users list page with search and filters
-- [ ] 8.2 Create user detail/edit page
-- [ ] 8.3 Create user creation form with validation
-- [ ] 8.4 Implement role assignment UI
-- [ ] 8.5 Create user status management (active/inactive)
-- [ ] 8.6 Add confirmation dialogs for destructive actions
-- [ ] 8.7 Implement client-side pagination
-- [ ] 8.8 Add toast notifications for success/error
+- [x] 8.1 Create users list page with search and filters
+- [x] 8.2 Create user detail/edit page
+- [x] 8.3 Create user creation form with validation
+- [x] 8.4 Implement role assignment UI
+- [x] 8.5 Create user status management (active/inactive)
+- [x] 8.6 Add confirmation dialogs for destructive actions
+- [x] 8.7 Implement client-side pagination
+- [x] 8.8 Add toast notifications for success/error
 
 ## 9. Frontend - Role & Policy Management UI
 
