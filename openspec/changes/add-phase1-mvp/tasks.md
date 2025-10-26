@@ -75,8 +75,8 @@
 - [x] 5.7 Create REST endpoint DELETE /v1/users/{id} (deactivate)
 - [x] 5.8 Create REST endpoint POST /v1/roles (create role)
 - [x] 5.9 Create REST endpoint GET /v1/roles (list roles)
-- [ ] 5.10 Create REST endpoint POST /v1/users/{id}/roles (assign role)
-- [ ] 5.11 Create REST endpoint DELETE /v1/users/{userId}/roles/{roleId}
+- [x] 5.10 Create REST endpoint POST /v1/users/{id}/roles (assign role)
+- [x] 5.11 Create REST endpoint DELETE /v1/users/{userId}/roles/{roleId}
 - [x] 5.12 Implement role hierarchy resolution
 - [x] 5.13 Add JSONB support for user attributes
 - [x] 5.14 Write tests for user and role management
