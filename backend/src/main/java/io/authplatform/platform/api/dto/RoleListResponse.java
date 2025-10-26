@@ -21,7 +21,7 @@ import java.util.List;
 public class RoleListResponse {
 
     @Schema(description = "List of roles for the current page", requiredMode = Schema.RequiredMode.REQUIRED)
-    private List<RoleResponse> roles;
+    private List<RoleResponse> content;
 
     @Schema(description = "Current page number (0-indexed)", requiredMode = Schema.RequiredMode.REQUIRED)
     private Integer page;
