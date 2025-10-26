@@ -16,6 +16,7 @@ import io.authplatform.platform.domain.repository.UserRoleRepository;
 import io.authplatform.platform.opa.client.OpaClient;
 import io.authplatform.platform.opa.dto.OpaRequest;
 import io.authplatform.platform.opa.dto.OpaResponse;
+import io.authplatform.platform.service.AuthorizationCacheService;
 import io.authplatform.platform.service.AuthorizationService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -67,6 +68,7 @@ public class RbacAuthorizationService implements AuthorizationService {
     private final UserRoleRepository userRoleRepository;
     private final RolePermissionRepository rolePermissionRepository;
     private final OpaProperties opaProperties;
+    private final AuthorizationCacheService cacheService;
 
     @Autowired(required = false)
     private OpaClient opaClient;
@@ -77,13 +79,15 @@ public class RbacAuthorizationService implements AuthorizationService {
             PermissionRepository permissionRepository,
             UserRoleRepository userRoleRepository,
             RolePermissionRepository rolePermissionRepository,
-            OpaProperties opaProperties) {
+            OpaProperties opaProperties,
+            AuthorizationCacheService cacheService) {
         this.userRepository = userRepository;
         this.roleRepository = roleRepository;
         this.permissionRepository = permissionRepository;
         this.userRoleRepository = userRoleRepository;
         this.rolePermissionRepository = rolePermissionRepository;
         this.opaProperties = opaProperties;
+        this.cacheService = cacheService;
     }
 
     // In-memory statistics (will be replaced with Prometheus metrics in Task 3.10)
@@ -98,6 +102,17 @@ public class RbacAuthorizationService implements AuthorizationService {
         // Validate request first (this will throw IllegalArgumentException if invalid)
         validateRequest(request);
 
+        // Check cache first
+        Optional<AuthorizationResponse> cachedResponse = cacheService.get(request);
+        if (cachedResponse.isPresent()) {
+            log.debug("Cache hit for request: org={}, principal={}, action={}, resource={}",
+                    request.getOrganizationId(),
+                    request.getPrincipal().getId(),
+                    request.getAction(),
+                    request.getResource().getType() + ":" + request.getResource().getId());
+            return cachedResponse.get();
+        }
+
         long startTime = System.currentTimeMillis();
         totalRequests.incrementAndGet();
 
@@ -110,6 +125,9 @@ public class RbacAuthorizationService implements AuthorizationService {
 
             // Evaluate authorization
             AuthorizationResponse response = evaluateAuthorization(request, startTime);
+
+            // Cache the result
+            cacheService.put(request, response);
 
             // Update statistics
             updateStatistics(response);
@@ -164,15 +182,14 @@ public class RbacAuthorizationService implements AuthorizationService {
 
     @Override
     public void invalidateCache(UUID organizationId, String principalId) {
-        // TODO: Implement cache invalidation in Task 3.5-3.6
-        log.debug("Cache invalidation requested for principal: org={}, principal={}",
-                organizationId, principalId);
+        log.info("Invalidating cache for principal: org={}, principal={}", organizationId, principalId);
+        cacheService.invalidate(organizationId, principalId);
     }
 
     @Override
     public void invalidateCacheForOrganization(UUID organizationId) {
-        // TODO: Implement cache invalidation in Task 3.5-3.6
-        log.debug("Cache invalidation requested for organization: {}", organizationId);
+        log.info("Invalidating cache for organization: {}", organizationId);
+        cacheService.invalidateOrganization(organizationId);
     }
 
     @Override
