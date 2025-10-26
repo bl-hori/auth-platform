@@ -153,7 +153,7 @@
 
 - [x] 12.1 Achieve 80%+ unit test coverage (configured in build.gradle, 23 test files)
 - [x] 12.2 Write integration tests for all API endpoints (AuthorizationControllerIntegrationTest, DatabaseIntegrationTest, etc.)
-- [ ] 12.3 Create E2E tests with Playwright (not yet implemented)
+- [x] 12.3 Create E2E tests with Playwright
 - [ ] 12.4 Implement performance tests with Gatling (not yet implemented)
 - [ ] 12.5 Run load test: 10,000 req/s sustained (performance testing not done)
 - [ ] 12.6 Verify p95 latency <10ms for cached requests (performance benchmarks not run)

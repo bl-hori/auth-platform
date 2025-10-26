@@ -34,3 +34,8 @@ logs/
 # Temporary
 *.tmp
 *.temp
+
+# Playwright
+/frontend/test-results/
+/frontend/playwright-report/
+/frontend/playwright/.cache/
