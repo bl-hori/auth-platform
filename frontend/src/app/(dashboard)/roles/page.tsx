@@ -215,7 +215,7 @@ export default function RolesPage() {
                     </TableCell>
                     <TableCell>
                       <Badge variant="outline">
-                        {role.permissions.length} 個
+                        {role.permissions?.length ?? 0} 個
                       </Badge>
                     </TableCell>
                     <TableCell className="text-right">

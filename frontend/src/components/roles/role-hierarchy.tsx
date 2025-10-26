@@ -166,7 +166,7 @@ export function RoleHierarchy({ currentRoleId }: RoleHierarchyProps) {
               <span className="font-medium">{node.role.displayName}</span>
               {isCurrent && <Badge variant="default">現在のロール</Badge>}
               <Badge variant="outline">
-                {node.role.permissions.length} 権限
+                {node.role.permissions?.length ?? 0} 権限
               </Badge>
             </div>
             {node.role.description && (

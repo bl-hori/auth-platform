@@ -58,9 +58,13 @@ export interface Role {
   displayName: string
   description?: string
   parentRoleId?: string
-  permissions: Permission[]
+  permissions?: Permission[]
+  level?: number
+  isSystem?: boolean
+  metadata?: Record<string, unknown>
   createdAt: string
   updatedAt: string
+  deletedAt?: string
 }
 
 /**
