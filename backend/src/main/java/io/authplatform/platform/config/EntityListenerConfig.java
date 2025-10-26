@@ -1,6 +1,9 @@
 package io.authplatform.platform.config;
 
-import io.authplatform.platform.domain.listener.CacheInvalidationListener;
+import io.authplatform.platform.domain.listener.PolicyCacheInvalidationListener;
+import io.authplatform.platform.domain.listener.RolePermissionCacheInvalidationListener;
+import io.authplatform.platform.domain.listener.UserCacheInvalidationListener;
+import io.authplatform.platform.domain.listener.UserRoleCacheInvalidationListener;
 import io.authplatform.platform.service.AuthorizationCacheService;
 import jakarta.annotation.PostConstruct;
 import lombok.RequiredArgsConstructor;
@@ -25,12 +28,17 @@ public class EntityListenerConfig {
      * Initialize entity listeners with Spring-managed dependencies.
      *
      * <p>This method is called after Spring context initialization to inject
-     * the cache service into the {@link CacheInvalidationListener}.
+     * the cache service into all cache invalidation listeners.
      */
     @PostConstruct
     public void initializeEntityListeners() {
-        log.info("Initializing JPA entity listeners");
-        CacheInvalidationListener.setCacheService(cacheService);
-        log.info("CacheInvalidationListener initialized with cache service");
+        log.info("Initializing JPA entity listeners for cache invalidation");
+
+        UserRoleCacheInvalidationListener.setCacheService(cacheService);
+        RolePermissionCacheInvalidationListener.setCacheService(cacheService);
+        PolicyCacheInvalidationListener.setCacheService(cacheService);
+        UserCacheInvalidationListener.setCacheService(cacheService);
+
+        log.info("All cache invalidation listeners initialized successfully");
     }
 }

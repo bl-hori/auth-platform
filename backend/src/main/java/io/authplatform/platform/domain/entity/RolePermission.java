@@ -1,6 +1,6 @@
 package io.authplatform.platform.domain.entity;
 
-import io.authplatform.platform.domain.listener.CacheInvalidationListener;
+import io.authplatform.platform.domain.listener.RolePermissionCacheInvalidationListener;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -49,7 +49,7 @@ import java.util.UUID;
         @Index(name = "idx_role_permissions_permission_id", columnList = "permission_id")
     }
 )
-@EntityListeners(CacheInvalidationListener.class)
+@EntityListeners(RolePermissionCacheInvalidationListener.class)
 @Data
 @NoArgsConstructor
 @AllArgsConstructor

@@ -1,6 +1,6 @@
 package io.authplatform.platform.domain.entity;
 
-import io.authplatform.platform.domain.listener.CacheInvalidationListener;
+import io.authplatform.platform.domain.listener.PolicyCacheInvalidationListener;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -64,7 +64,7 @@ import java.util.UUID;
         @Index(name = "idx_policies_type", columnList = "policy_type")
     }
 )
-@EntityListeners(CacheInvalidationListener.class)
+@EntityListeners(PolicyCacheInvalidationListener.class)
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
