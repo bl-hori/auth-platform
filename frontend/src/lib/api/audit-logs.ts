@@ -8,6 +8,12 @@ import { apiClient } from '@/lib/api-client'
 import type { AuditLog, PagedResponse } from '@/types'
 
 /**
+ * Check if we should use mock data
+ * Set NEXT_PUBLIC_USE_MOCK_API=false to use real backend API
+ */
+const USE_MOCK = process.env.NEXT_PUBLIC_USE_MOCK_API !== 'false'
+
+/**
  * Audit log query parameters
  */
 export interface AuditLogParams {
@@ -31,7 +37,7 @@ export async function getAuditLogs(
   params?: AuditLogParams
 ): Promise<PagedResponse<AuditLog>> {
   // In development, return mock data
-  if (process.env.NODE_ENV === 'development') {
+  if (USE_MOCK) {
     return getMockAuditLogs(params)
   }
 
@@ -48,7 +54,7 @@ export async function getAuditLogs(
  */
 export async function getAuditLog(id: string): Promise<AuditLog> {
   // In development, return mock data
-  if (process.env.NODE_ENV === 'development') {
+  if (USE_MOCK) {
     return getMockAuditLog(id)
   }
 
@@ -65,7 +71,7 @@ export async function exportAuditLogsCsv(
   params?: AuditLogParams
 ): Promise<string> {
   // In development, return mock CSV
-  if (process.env.NODE_ENV === 'development') {
+  if (USE_MOCK) {
     return getMockCsv(params)
   }
 
