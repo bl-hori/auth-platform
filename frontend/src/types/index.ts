@@ -172,3 +172,21 @@ export interface PolicyVersion {
   publishedBy: string
   comment?: string
 }
+
+/**
+ * Audit log entity
+ */
+export interface AuditLog {
+  id: string
+  organizationId: string
+  timestamp: string
+  userId: string
+  userName?: string
+  action: string
+  resource: string
+  resourceId?: string
+  decision?: 'ALLOW' | 'DENY'
+  metadata?: Record<string, unknown>
+  ipAddress?: string
+  userAgent?: string
+}
