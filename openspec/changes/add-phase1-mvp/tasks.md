@@ -42,7 +42,7 @@
 - [x] 3.7 Create REST endpoint POST /v1/authorize
 - [x] 3.8 Create REST endpoint POST /v1/authorize/batch
 - [x] 3.9 Implement rate limiting using Bucket4j
-- [ ] 3.10 Add Prometheus metrics for authorization requests
+- [x] 3.10 Add Prometheus metrics for authorization requests
 - [x] 3.11 Write unit tests for authorization service
 - [ ] 3.12 Write integration tests for authorization API
 - [ ] 3.13 Implement circuit breaker for OPA communication
