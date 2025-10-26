@@ -1,0 +1,49 @@
+# Test environment configuration
+
+spring:
+  datasource:
+    url: jdbc:tc:postgresql:15:///testdb
+    driver-class-name: org.testcontainers.jdbc.ContainerDatabaseDriver
+  jpa:
+    hibernate:
+      ddl-auto: validate
+    show-sql: false
+  flyway:
+    enabled: true
+
+# OPA configuration - disabled for tests (mocked)
+opa:
+  enabled: false
+  base-url: http://localhost:8181
+  policy-path: /v1/data/authz/allow
+  timeout-ms: 1000
+  retry-attempts: 0
+
+# Redis configuration - use embedded for tests
+spring.data.redis:
+  host: localhost
+  port: 6379
+
+# Disable async for tests
+spring.task.execution:
+  pool:
+    core-size: 1
+    max-size: 1
+
+# Security
+auth-platform:
+  security:
+    api-keys:
+      enabled: true
+      header-name: X-API-Key
+      keys:
+        dev-key-org1-abc123: org-001
+        dev-key-org2-def456: org-002
+        test-key-xyz789: org-test
+
+# Logging
+logging:
+  level:
+    io.authplatform: DEBUG
+    org.springframework.web: INFO
+    org.hibernate: WARN

@@ -49,16 +49,16 @@
 
 ## 4. Policy Management
 
-- [ ] 4.1 Implement PolicyService for CRUD operations
-- [ ] 4.2 Implement Rego syntax validation
-- [ ] 4.3 Implement forbidden import detection (security check)
-- [ ] 4.4 Create REST endpoint POST /v1/policies (create)
-- [ ] 4.5 Create REST endpoint GET /v1/policies (list with pagination)
-- [ ] 4.6 Create REST endpoint GET /v1/policies/{id} (get details)
-- [ ] 4.7 Create REST endpoint PUT /v1/policies/{id} (update/new version)
-- [ ] 4.8 Create REST endpoint DELETE /v1/policies/{id} (soft delete)
-- [ ] 4.9 Create REST endpoint POST /v1/policies/{id}/publish (activate)
-- [ ] 4.10 Create REST endpoint POST /v1/policies/{id}/test (test execution)
+- [x] 4.1 Implement PolicyService for CRUD operations
+- [x] 4.2 Implement Rego syntax validation
+- [x] 4.3 Implement forbidden import detection (security check)
+- [x] 4.4 Create REST endpoint POST /v1/policies (create)
+- [x] 4.5 Create REST endpoint GET /v1/policies (list with pagination)
+- [x] 4.6 Create REST endpoint GET /v1/policies/{id} (get details)
+- [x] 4.7 Create REST endpoint PUT /v1/policies/{id} (update/new version)
+- [x] 4.8 Create REST endpoint DELETE /v1/policies/{id} (soft delete)
+- [x] 4.9 Create REST endpoint POST /v1/policies/{id}/publish (activate)
+- [x] 4.10 Create REST endpoint POST /v1/policies/{id}/test (test execution)
 - [ ] 4.11 Implement policy compilation and storage
 - [ ] 4.12 Implement policy distribution to OPA instances
 - [ ] 4.13 Write comprehensive tests for policy management
@@ -83,14 +83,14 @@
 
 ## 6. Audit Logging
 
-- [ ] 6.1 Implement AuditLogService with async logging
+- [x] 6.1 Implement AuditLogService with async logging
 - [ ] 6.2 Create audit interceptor for authorization decisions
 - [ ] 6.3 Create audit aspect for administrative actions
-- [ ] 6.4 Implement AuditLogRepository with custom queries
-- [ ] 6.5 Create REST endpoint GET /v1/audit-logs (search/filter)
-- [ ] 6.6 Implement time-range query optimization
-- [ ] 6.7 Implement pagination for audit log results
-- [ ] 6.8 Add export functionality (CSV format)
+- [x] 6.4 Implement AuditLogRepository with custom queries
+- [x] 6.5 Create REST endpoint GET /v1/audit-logs (search/filter)
+- [x] 6.6 Implement time-range query optimization
+- [x] 6.7 Implement pagination for audit log results
+- [x] 6.8 Add export functionality (CSV format)
 - [ ] 6.9 Implement log retention policy (90 days)
 - [ ] 6.10 Write tests for audit logging
 - [ ] 6.11 Add audit log integrity verification
