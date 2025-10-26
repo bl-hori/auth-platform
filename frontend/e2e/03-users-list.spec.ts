@@ -29,13 +29,13 @@ test.describe('Users List Page', () => {
     await loginButton.click();
 
     // Wait for navigation to dashboard
-    await page.waitForURL('**/dashboard', { timeout: 10000 });
+    await page.waitForURL('**/dashboard');
     await page.waitForLoadState('networkidle');
 
     // Navigate to users page
     const usersLink = page.getByRole('link', { name: 'ユーザー管理' });
     await usersLink.click();
-    await page.waitForURL('**/users', { timeout: 10000 });
+    await page.waitForURL('**/users');
     await page.waitForLoadState('networkidle');
   });
 

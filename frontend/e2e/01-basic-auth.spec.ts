@@ -61,7 +61,7 @@ test.describe('Basic Authentication', () => {
     await loginButton.click();
 
     // Should navigate to dashboard
-    await page.waitForURL('**/dashboard', { timeout: 10000 });
+    await page.waitForURL('**/dashboard');
     await page.waitForLoadState('networkidle');
 
     // Verify we're on dashboard
@@ -79,7 +79,7 @@ test.describe('Basic Authentication', () => {
     const loginButton = page.getByTestId('login-button');
     await loginButton.click();
 
-    await page.waitForURL('**/dashboard', { timeout: 10000 });
+    await page.waitForURL('**/dashboard');
     await page.waitForLoadState('networkidle');
 
     // Reload the page
@@ -101,7 +101,7 @@ test.describe('Basic Authentication', () => {
     const loginButton = page.getByTestId('login-button');
     await loginButton.click();
 
-    await page.waitForURL('**/dashboard', { timeout: 10000 });
+    await page.waitForURL('**/dashboard');
     await page.waitForLoadState('networkidle');
 
     // Find and click logout button
@@ -109,7 +109,7 @@ test.describe('Basic Authentication', () => {
     await logoutButton.click();
 
     // Should navigate back to login
-    await page.waitForURL('**/login', { timeout: 10000 });
+    await page.waitForURL('**/login');
     expect(page.url()).toContain('/login');
   });
 
@@ -118,7 +118,7 @@ test.describe('Basic Authentication', () => {
     await page.goto('/dashboard');
 
     // Should redirect to login
-    await page.waitForURL('**/login', { timeout: 10000 });
+    await page.waitForURL('**/login');
     expect(page.url()).toContain('/login');
   });
 });
