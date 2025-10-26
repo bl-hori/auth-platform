@@ -54,12 +54,12 @@ export function RoleAssignment({ userId }: RoleAssignmentProps) {
     const loadRoles = async () => {
       setLoading(true)
       try {
-        const [all, assigned] = await Promise.all([
+        const [rolesResponse, assigned] = await Promise.all([
           getRoles(),
           getUserRoles(userId),
         ])
-        // Ensure we always have arrays
-        setAvailableRoles(Array.isArray(all) ? all : [])
+        // Ensure we always have arrays from the content field
+        setAvailableRoles(Array.isArray(rolesResponse.content) ? rolesResponse.content : [])
         setAssignedRoles(Array.isArray(assigned) ? assigned : [])
       } catch (error) {
         console.error('Failed to load roles:', error)

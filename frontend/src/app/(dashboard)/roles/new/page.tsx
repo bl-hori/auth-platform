@@ -44,9 +44,9 @@ export default function NewRolePage() {
   useEffect(() => {
     const loadRoles = async () => {
       try {
-        const data = await getRoles()
-        // Ensure we always have an array
-        setRoles(Array.isArray(data) ? data : [])
+        const response = await getRoles()
+        // Ensure we always have an array from the content field
+        setRoles(Array.isArray(response.content) ? response.content : [])
       } catch (error) {
         console.error('Failed to load roles:', error)
         // Set empty array on error

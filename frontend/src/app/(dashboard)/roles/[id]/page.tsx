@@ -57,14 +57,14 @@ export default function RoleEditPage({
       setLoading(true)
       try {
         const { id } = await params
-        const [roleData, rolesData] = await Promise.all([
+        const [roleData, rolesResponse] = await Promise.all([
           getRole(id),
           getRoles(),
         ])
 
         setRole(roleData)
-        // Ensure we always have an array
-        setRoles(Array.isArray(rolesData) ? rolesData : [])
+        // Ensure we always have an array from the content field
+        setRoles(Array.isArray(rolesResponse.content) ? rolesResponse.content : [])
         setFormData({
           displayName: roleData.displayName,
           description: roleData.description || '',

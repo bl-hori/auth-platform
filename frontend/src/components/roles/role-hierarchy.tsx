@@ -48,13 +48,17 @@ export function RoleHierarchy({ currentRoleId }: RoleHierarchyProps) {
     const loadRoles = async () => {
       setLoading(true)
       try {
-        const data = await getRoles()
-        setRoles(data)
-        setHierarchy(buildHierarchy(data))
+        const response = await getRoles()
+        // Ensure we always have an array from the content field
+        const rolesData = Array.isArray(response.content) ? response.content : []
+        setRoles(rolesData)
+        setHierarchy(buildHierarchy(rolesData))
         // Auto-expand path to current role
-        expandPathToRole(data, currentRoleId)
+        expandPathToRole(rolesData, currentRoleId)
       } catch (error) {
         console.error('Failed to load roles:', error)
+        // Set empty array on error
+        setRoles([])
         toast({
           title: 'エラー',
           description: 'ロール情報の読み込みに失敗しました',
