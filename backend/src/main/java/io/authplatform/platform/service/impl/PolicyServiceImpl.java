@@ -16,6 +16,7 @@ import io.authplatform.platform.service.PolicyService;
 import io.authplatform.platform.service.PolicyValidationService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.lang.Nullable;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.Pageable;
@@ -52,7 +53,8 @@ public class PolicyServiceImpl implements PolicyService {
     private final OrganizationRepository organizationRepository;
     private final UserRepository userRepository;
     private final PolicyValidationService validationService;
-    private final OpaClient opaClient;
+    @Nullable
+    private final OpaClient opaClient; // Optional - may not be available in test environments
 
     @Override
     @Transactional
@@ -294,6 +296,10 @@ public class PolicyServiceImpl implements PolicyService {
     @Transactional(readOnly = true)
     public PolicyTestResponse testPolicy(UUID policyId, PolicyTestRequest request) {
         log.info("Testing policy: id={}", policyId);
+
+        if (opaClient == null) {
+            throw new IllegalStateException("OPA client not available - policy testing is disabled");
+        }
 
         Policy policy = policyRepository.findById(policyId)
                 .orElseThrow(() -> new PolicyNotFoundException("Policy not found: " + policyId));

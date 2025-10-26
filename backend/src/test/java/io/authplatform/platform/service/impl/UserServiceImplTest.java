@@ -58,7 +58,6 @@ class UserServiceImplTest {
 
     @BeforeEach
     void setUp() {
-        userService = new UserServiceImpl(userRepository, organizationRepository);
         userService = new UserServiceImpl(userRepository, organizationRepository, roleRepository, userRoleRepository);
 
         orgId = UUID.randomUUID();
