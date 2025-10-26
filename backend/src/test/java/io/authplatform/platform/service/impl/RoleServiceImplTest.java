@@ -6,6 +6,8 @@ import io.authplatform.platform.api.dto.RoleUpdateRequest;
 import io.authplatform.platform.domain.entity.Organization;
 import io.authplatform.platform.domain.entity.Role;
 import io.authplatform.platform.domain.repository.OrganizationRepository;
+import io.authplatform.platform.domain.repository.PermissionRepository;
+import io.authplatform.platform.domain.repository.RolePermissionRepository;
 import io.authplatform.platform.domain.repository.RoleRepository;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
@@ -34,6 +36,12 @@ class RoleServiceImplTest {
     @Mock
     private OrganizationRepository organizationRepository;
 
+    @Mock
+    private PermissionRepository permissionRepository;
+
+    @Mock
+    private RolePermissionRepository rolePermissionRepository;
+
     private RoleServiceImpl roleService;
 
     private Organization testOrg;
@@ -45,7 +53,12 @@ class RoleServiceImplTest {
 
     @BeforeEach
     void setUp() {
-        roleService = new RoleServiceImpl(roleRepository, organizationRepository);
+        roleService = new RoleServiceImpl(
+                roleRepository,
+                organizationRepository,
+                permissionRepository,
+                rolePermissionRepository
+        );
 
         orgId = UUID.randomUUID();
         roleId = UUID.randomUUID();

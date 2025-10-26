@@ -123,4 +123,38 @@ public interface RoleService {
      * @throws IllegalStateException if role is system role or has child roles
      */
     void deleteRole(UUID roleId);
+
+    /**
+     * Assign a permission to a role.
+     *
+     * <p>This method validates:
+     * <ul>
+     *   <li>Role exists and is not deleted</li>
+     *   <li>Permission exists and is not deleted</li>
+     *   <li>Both belong to the same organization</li>
+     *   <li>Permission is not already assigned to the role</li>
+     * </ul>
+     *
+     * @param roleId the role ID
+     * @param permissionId the permission ID
+     * @throws IllegalArgumentException if role or permission does not exist
+     * @throws IllegalStateException if permission is already assigned or organization mismatch
+     */
+    void assignPermissionToRole(UUID roleId, UUID permissionId);
+
+    /**
+     * Remove a permission from a role.
+     *
+     * <p>This method validates:
+     * <ul>
+     *   <li>Role exists</li>
+     *   <li>Permission exists</li>
+     *   <li>Permission is assigned to the role</li>
+     * </ul>
+     *
+     * @param roleId the role ID
+     * @param permissionId the permission ID
+     * @throws IllegalArgumentException if role, permission, or assignment does not exist
+     */
+    void removePermissionFromRole(UUID roleId, UUID permissionId);
 }
