@@ -6,6 +6,7 @@ dist/
 build/
 out/
 target/
+backend/bin/
 
 # IDE
 .idea/
