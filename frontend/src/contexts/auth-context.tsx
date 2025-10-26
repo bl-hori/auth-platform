@@ -89,16 +89,31 @@ export function AuthProvider({ children }: AuthProviderProps) {
         setUser(JSON.parse(storedUser))
         setOrganization(JSON.parse(storedOrg))
 
-        // Verify API key is still valid
-        const isHealthy = await apiClient.healthCheck()
-        if (!isHealthy) {
-          // API key is invalid, clear session
-          logout()
+        // Verify API key is still valid (optional in development)
+        if (process.env.NODE_ENV === 'production') {
+          const isHealthy = await apiClient.healthCheck()
+          if (!isHealthy) {
+            // API key is invalid, clear session
+            logout()
+          }
+        } else {
+          // In development, try to verify but don't logout if API is unavailable
+          try {
+            await apiClient.healthCheck()
+          } catch {
+            console.warn('⚠️ Backend API check failed during session restore')
+          }
         }
       }
     } catch (error) {
       console.error('Failed to restore session:', error)
-      logout()
+      // Only logout in production or if it's a parse error
+      if (
+        process.env.NODE_ENV === 'production' ||
+        error instanceof SyntaxError
+      ) {
+        logout()
+      }
     } finally {
       setIsLoading(false)
     }
@@ -150,10 +165,23 @@ export function AuthProvider({ children }: AuthProviderProps) {
         updatedAt: new Date().toISOString(),
       }
 
-      // Verify API connectivity
-      const isHealthy = await apiClient.healthCheck()
-      if (!isHealthy) {
-        throw new Error('API is not accessible. Please check your connection.')
+      // Verify API connectivity (skip in development if API is not available)
+      if (process.env.NODE_ENV === 'production') {
+        const isHealthy = await apiClient.healthCheck()
+        if (!isHealthy) {
+          throw new Error(
+            'API is not accessible. Please check your connection.'
+          )
+        }
+      } else {
+        // In development, try to check but don't fail if API is not available
+        try {
+          await apiClient.healthCheck()
+          // eslint-disable-next-line no-console
+          console.log('✅ Backend API is accessible')
+        } catch {
+          console.warn('⚠️ Backend API is not accessible, using mock data')
+        }
       }
 
       // Store session data
