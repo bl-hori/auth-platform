@@ -11,6 +11,7 @@ import org.springframework.security.config.annotation.web.configurers.AbstractHt
 import org.springframework.security.config.http.SessionCreationPolicy;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
+import org.springframework.web.cors.CorsConfigurationSource;
 
 /**
  * Spring Security configuration for the Authorization Platform.
@@ -41,16 +42,22 @@ public class SecurityConfig {
 
     private final ApiKeyProperties apiKeyProperties;
     private final RateLimitFilter rateLimitFilter;
+    private final CorsConfigurationSource corsConfigurationSource;
 
     /**
      * Constructs the security configuration.
      *
-     * @param apiKeyProperties API key configuration properties
-     * @param rateLimitFilter  Rate limit filter
+     * @param apiKeyProperties        API key configuration properties
+     * @param rateLimitFilter         Rate limit filter
+     * @param corsConfigurationSource CORS configuration source
      */
-    public SecurityConfig(ApiKeyProperties apiKeyProperties, RateLimitFilter rateLimitFilter) {
+    public SecurityConfig(
+            ApiKeyProperties apiKeyProperties,
+            RateLimitFilter rateLimitFilter,
+            CorsConfigurationSource corsConfigurationSource) {
         this.apiKeyProperties = apiKeyProperties;
         this.rateLimitFilter = rateLimitFilter;
+        this.corsConfigurationSource = corsConfigurationSource;
     }
 
     /**
@@ -74,8 +81,8 @@ public class SecurityConfig {
             // Disable CSRF for stateless API
             .csrf(AbstractHttpConfigurer::disable)
 
-            // Configure CORS (allow all origins for development, restrict in production)
-            .cors(cors -> cors.configure(http))
+            // Configure CORS using the CorsConfigurationSource bean
+            .cors(cors -> cors.configurationSource(corsConfigurationSource))
 
             // Configure authorization rules
             .authorizeHttpRequests(auth -> auth
