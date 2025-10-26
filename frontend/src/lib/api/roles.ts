@@ -198,6 +198,97 @@ export async function removePermission(
   )
 }
 
+/**
+ * Create permission request
+ */
+export interface CreatePermissionRequest {
+  organizationId: string
+  name: string
+  displayName?: string
+  description?: string
+  resourceType: string
+  action: string
+  effect: 'allow' | 'deny'
+  conditions?: Record<string, unknown>
+}
+
+/**
+ * Update permission request
+ */
+export interface UpdatePermissionRequest {
+  displayName?: string
+  description?: string
+  effect?: 'allow' | 'deny'
+  conditions?: Record<string, unknown>
+}
+
+/**
+ * Create a new permission
+ *
+ * @param request - Permission creation request
+ * @returns Created permission
+ */
+export async function createPermission(
+  request: CreatePermissionRequest
+): Promise<Permission> {
+  // In development, create mock permission
+  if (USE_MOCK) {
+    const newPermission: Permission = {
+      id: `perm-${Date.now()}`,
+      resource: request.resourceType,
+      action: request.action,
+      description: request.description,
+      createdAt: new Date().toISOString(),
+      updatedAt: new Date().toISOString(),
+    }
+    return newPermission
+  }
+
+  return apiClient.post<Permission>('/v1/permissions', request)
+}
+
+/**
+ * Update an existing permission
+ *
+ * @param permissionId - Permission ID
+ * @param request - Permission update request
+ * @returns Updated permission
+ */
+export async function updatePermission(
+  permissionId: string,
+  request: UpdatePermissionRequest
+): Promise<Permission> {
+  // In development, return mock permission
+  if (USE_MOCK) {
+    const permission = getMockPermissions().find((p) => p.id === permissionId)
+    if (!permission) {
+      throw new Error(`Permission ${permissionId} not found`)
+    }
+    return {
+      ...permission,
+      description: request.description ?? permission.description,
+      updatedAt: new Date().toISOString(),
+    }
+  }
+
+  return apiClient.put<Permission>(`/v1/permissions/${permissionId}`, request)
+}
+
+/**
+ * Delete a permission
+ *
+ * @param permissionId - Permission ID
+ */
+export async function deletePermission(permissionId: string): Promise<void> {
+  // In development, simulate deletion
+  if (USE_MOCK) {
+    console.log(`Mock: Deleting permission ${permissionId}`)
+    return
+  }
+
+  return apiClient.delete<void>(`/v1/permissions/${permissionId}`)
+}
+
 // Mock data
 const mockPermissions: Permission[] = [
   {

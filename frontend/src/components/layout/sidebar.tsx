@@ -13,6 +13,7 @@ import {
   FileText,
   History,
   Settings,
+  Key,
   type LucideIcon,
 } from 'lucide-react'
 import Link from 'next/link'
@@ -47,6 +48,11 @@ const navItems: NavItem[] = [
     href: '/roles',
     label: 'ロール管理',
     icon: Shield,
+  },
+  {
+    href: '/permissions',
+    label: '権限管理',
+    icon: Key,
   },
   {
     href: '/policies',
