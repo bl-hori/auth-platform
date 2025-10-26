@@ -53,14 +53,16 @@ test.describe('Basic Authentication', () => {
     await page.waitForLoadState('networkidle');
 
     // Fill in API key (any key works in development)
-    const apiKeyInput = page.locator('input[type="password"]').first();
+    const apiKeyInput = page.getByTestId('api-key-input');
     await apiKeyInput.fill('test-api-key-12345');
 
     // Click login button
-    await page.click('button[type="submit"]');
+    const loginButton = page.getByTestId('login-button');
+    await loginButton.click();
 
     // Should navigate to dashboard
     await page.waitForURL('**/dashboard', { timeout: 10000 });
+    await page.waitForLoadState('networkidle');
 
     // Verify we're on dashboard
     expect(page.url()).toContain('/dashboard');
@@ -71,11 +73,14 @@ test.describe('Basic Authentication', () => {
     await page.goto('/login');
     await page.waitForLoadState('networkidle');
 
-    const apiKeyInput = page.locator('input[type="password"]').first();
+    const apiKeyInput = page.getByTestId('api-key-input');
     await apiKeyInput.fill('test-api-key-12345');
-    await page.click('button[type="submit"]');
+
+    const loginButton = page.getByTestId('login-button');
+    await loginButton.click();
 
     await page.waitForURL('**/dashboard', { timeout: 10000 });
+    await page.waitForLoadState('networkidle');
 
     // Reload the page
     await page.reload();
@@ -90,14 +95,17 @@ test.describe('Basic Authentication', () => {
     await page.goto('/login');
     await page.waitForLoadState('networkidle');
 
-    const apiKeyInput = page.locator('input[type="password"]').first();
+    const apiKeyInput = page.getByTestId('api-key-input');
     await apiKeyInput.fill('test-api-key-12345');
-    await page.click('button[type="submit"]');
+
+    const loginButton = page.getByTestId('login-button');
+    await loginButton.click();
 
     await page.waitForURL('**/dashboard', { timeout: 10000 });
+    await page.waitForLoadState('networkidle');
 
     // Find and click logout button
-    const logoutButton = page.locator('button', { hasText: 'ログアウト' });
+    const logoutButton = page.getByTestId('logout-button');
     await logoutButton.click();
 
     // Should navigate back to login

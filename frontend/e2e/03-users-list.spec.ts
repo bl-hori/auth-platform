@@ -20,11 +20,17 @@ test.describe('Users List Page', () => {
     await page.goto('/login');
     await page.waitForLoadState('networkidle');
 
-    const apiKeyInput = page.locator('input[type="password"]').first();
+    // Use data-testid for stable selection
+    const apiKeyInput = page.getByTestId('api-key-input');
     await apiKeyInput.fill('test-api-key-12345');
-    await page.click('button[type="submit"]');
 
+    // Click login button
+    const loginButton = page.getByTestId('login-button');
+    await loginButton.click();
+
+    // Wait for navigation to dashboard
     await page.waitForURL('**/dashboard', { timeout: 10000 });
+    await page.waitForLoadState('networkidle');
 
     // Navigate to users page
     await page.click('text=ユーザー管理');
