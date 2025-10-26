@@ -36,7 +36,7 @@
 - [x] 3.1 Implement AuthorizationRequest DTO with validation
 - [x] 3.2 Implement AuthorizationResponse DTO with decision reasoning
 - [x] 3.3 Create AuthorizationService with policy evaluation
-- [ ] 3.4 Integrate OPA (Open Policy Agent) via REST API
+- [x] 3.4 Integrate OPA (Open Policy Agent) via REST API
 - [ ] 3.5 Implement multi-layer caching (Caffeine L1 + Redis L2)
 - [ ] 3.6 Implement cache invalidation on policy/role changes
 - [ ] 3.7 Create REST endpoint POST /v1/authorize
