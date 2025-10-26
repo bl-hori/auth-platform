@@ -9,6 +9,10 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.cache.CacheManager;
 import org.springframework.cache.caffeine.CaffeineCache;
+import org.springframework.data.redis.connection.RedisConnection;
+import org.springframework.data.redis.connection.RedisConnectionFactory;
+import org.springframework.data.redis.core.Cursor;
+import org.springframework.data.redis.core.ScanOptions;
 import org.springframework.stereotype.Service;
 
 import java.util.Optional;
@@ -41,12 +45,12 @@ import java.util.concurrent.atomic.AtomicLong;
  * </pre>
  */
 @Service
-@RequiredArgsConstructor
 @Slf4j
 public class AuthorizationCacheServiceImpl implements AuthorizationCacheService {
 
     private final CacheManager caffeineCacheManager;
     private final CacheManager redisCacheManager;
+    private final RedisConnectionFactory redisConnectionFactory;
 
     // Statistics tracking
     private final AtomicLong totalRequests = new AtomicLong(0);
@@ -56,6 +60,15 @@ public class AuthorizationCacheServiceImpl implements AuthorizationCacheService 
 
     private static final String L1_CACHE_NAME = "authorizationCacheL1";
     private static final String L2_CACHE_NAME = "authorizationCache";
+
+    public AuthorizationCacheServiceImpl(
+            CacheManager caffeineCacheManager,
+            CacheManager redisCacheManager,
+            RedisConnectionFactory redisConnectionFactory) {
+        this.caffeineCacheManager = caffeineCacheManager;
+        this.redisCacheManager = redisCacheManager;
+        this.redisConnectionFactory = redisConnectionFactory;
+    }
 
     @Override
     public Optional<AuthorizationResponse> get(AuthorizationRequest request) {
@@ -132,15 +145,8 @@ public class AuthorizationCacheServiceImpl implements AuthorizationCacheService 
                     .forEach(nativeCache::invalidate);
         }
 
-        // Invalidate L2 cache entries matching the prefix
-        // Note: Redis doesn't support prefix-based invalidation easily
-        // This is a simplified implementation - production should use Redis SCAN
-        org.springframework.cache.Cache l2Cache = redisCacheManager.getCache(L2_CACHE_NAME);
-        if (l2Cache != null) {
-            // For now, we rely on TTL expiration in Redis
-            // A more robust implementation would use Redis SCAN to find and delete keys
-            log.debug("L2 cache invalidation for principal relies on TTL expiration");
-        }
+        // Invalidate L2 cache entries matching the prefix using Redis SCAN
+        invalidateRedisByPattern(keyPrefix + "*");
     }
 
     @Override
@@ -158,11 +164,8 @@ public class AuthorizationCacheServiceImpl implements AuthorizationCacheService 
                     .forEach(nativeCache::invalidate);
         }
 
-        // Invalidate L2 cache (simplified - production should use Redis SCAN)
-        org.springframework.cache.Cache l2Cache = redisCacheManager.getCache(L2_CACHE_NAME);
-        if (l2Cache != null) {
-            log.debug("L2 cache invalidation for organization relies on TTL expiration");
-        }
+        // Invalidate L2 cache using Redis SCAN
+        invalidateRedisByPattern(keyPrefix + "*");
     }
 
     @Override
@@ -276,5 +279,41 @@ public class AuthorizationCacheServiceImpl implements AuthorizationCacheService 
      */
     private String buildKeyPrefix(UUID organizationId, String principalId) {
         return String.format("%s:%s:", organizationId, principalId);
+    }
+
+    /**
+     * Invalidate Redis cache entries matching a pattern using SCAN.
+     *
+     * <p>This implementation uses Redis SCAN command to efficiently find and delete
+     * keys matching the given pattern without blocking the Redis server.
+     *
+     * @param pattern the key pattern to match (e.g., "orgId:principalId:*")
+     */
+    private void invalidateRedisByPattern(String pattern) {
+        try {
+            String cacheKeyPattern = L2_CACHE_NAME + "::" + pattern;
+
+            try (RedisConnection connection = redisConnectionFactory.getConnection()) {
+                ScanOptions options = ScanOptions.scanOptions()
+                        .match(cacheKeyPattern)
+                        .count(100)
+                        .build();
+
+                Cursor<byte[]> cursor = connection.scan(options);
+                int deletedCount = 0;
+
+                while (cursor.hasNext()) {
+                    byte[] key = cursor.next();
+                    connection.del(key);
+                    deletedCount++;
+                }
+
+                if (deletedCount > 0) {
+                    log.debug("Deleted {} cache entries matching pattern: {}", deletedCount, pattern);
+                }
+            }
+        } catch (Exception e) {
+            log.error("Failed to invalidate Redis cache by pattern: {}", pattern, e);
+        }
     }
 }

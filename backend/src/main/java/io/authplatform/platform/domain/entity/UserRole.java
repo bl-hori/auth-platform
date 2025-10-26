@@ -1,5 +1,6 @@
 package io.authplatform.platform.domain.entity;
 
+import io.authplatform.platform.domain.listener.UserRoleCacheInvalidationListener;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -43,6 +44,7 @@ import java.util.UUID;
         @Index(name = "idx_user_roles_expires_at", columnList = "expires_at")
     }
 )
+@EntityListeners(UserRoleCacheInvalidationListener.class)
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
