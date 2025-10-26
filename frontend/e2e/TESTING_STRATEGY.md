@@ -44,10 +44,11 @@
 
 ## Step-by-Step Testing Approach
 
-### Phase 1: Foundation (現在)
-✅ 基本的な認証フローのテスト
-✅ シンプルなナビゲーションテスト
-✅ ページ表示の基本確認
+### Phase 1: Foundation (完了 ✅)
+✅ 基本的な認証フローのテスト (6/6 tests passing)
+✅ シンプルなナビゲーションテスト (6/6 tests passing)
+✅ ページ表示の基本確認 (3/3 tests passing)
+✅ **全15テスト合格**
 
 ### Phase 2: Page Functionality (次のステップ)
 - ユーザー作成・編集・削除
@@ -145,6 +146,37 @@ await expect(page.locator('h1')).toBeVisible();
 - Verify environment variables are set
 - Check if services (backend, DB) are running in CI
 
+## Key Fixes Applied
+
+### 1. Error Message Selector (Commit: b24cf85)
+**Problem**: `getByRole('alert')` matched multiple alerts (error message + Next.js route announcer)
+**Solution**: Use `getByTestId('error-message')` for unique identification
+```typescript
+const errorAlert = page.getByTestId('error-message');
+await expect(errorAlert).toBeVisible({ timeout: 5000 });
+```
+
+### 2. Login Flow Stability (Commit: ba88824)
+**Problem**: `input[type="password"]` selector was unreliable
+**Solution**: Use `data-testid` attributes for stable element selection
+```typescript
+const apiKeyInput = page.getByTestId('api-key-input');
+const loginButton = page.getByTestId('login-button');
+await apiKeyInput.fill('test-api-key-12345');
+await loginButton.click();
+await page.waitForURL('**/dashboard', { timeout: 10000 });
+await page.waitForLoadState('networkidle');
+```
+
+### 3. Navigation Links (Commit: 3122bbd)
+**Problem**: `page.click('text=...')` didn't trigger proper Next.js navigation
+**Solution**: Use `getByRole('link')` for semantic link selection
+```typescript
+const usersLink = page.getByRole('link', { name: 'ユーザー管理' });
+await usersLink.click();
+await page.waitForURL('**/users', { timeout: 10000 });
+```
+
 ## Next Steps
 
 1. ✅ Fix basic authentication tests
@@ -159,4 +191,4 @@ await expect(page.locator('h1')).toBeVisible();
 ---
 
 **Last Updated**: 2025-10-26
-**Status**: Phase 1 - Foundation Tests
+**Status**: Phase 1 Complete ✅ (15/15 tests passing)
