@@ -1,5 +1,6 @@
 package io.authplatform.platform.domain.entity;
 
+import io.authplatform.platform.domain.listener.CacheInvalidationListener;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -45,6 +46,7 @@ import java.util.UUID;
         @Index(name = "idx_users_external_id", columnList = "external_id")
     }
 )
+@EntityListeners(CacheInvalidationListener.class)
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
