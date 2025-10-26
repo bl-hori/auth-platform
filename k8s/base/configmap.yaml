@@ -1,0 +1,26 @@
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: auth-platform-config
+  namespace: auth-platform-staging
+data:
+  # Database configuration
+  DATABASE_HOST: "postgres-service"
+  DATABASE_PORT: "5432"
+  DATABASE_NAME: "authplatform"
+
+  # Redis configuration
+  REDIS_HOST: "redis-service"
+  REDIS_PORT: "6379"
+
+  # OPA configuration
+  OPA_URL: "http://opa-service:8181"
+
+  # Backend configuration
+  BACKEND_PORT: "8080"
+  SPRING_PROFILES_ACTIVE: "staging"
+
+  # Frontend configuration
+  FRONTEND_PORT: "3000"
+  NEXT_PUBLIC_API_URL: "http://backend-service:8080"
