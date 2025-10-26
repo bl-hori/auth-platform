@@ -1,5 +1,8 @@
 import type { Metadata } from 'next'
+
 import './globals.css'
+import { ErrorBoundary } from '@/components/error-boundary'
+import { AuthProvider } from '@/contexts/auth-context'
 
 export const metadata: Metadata = {
   title: 'Auth Platform',
@@ -13,7 +16,11 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="ja">
-      <body className="antialiased">{children}</body>
+      <body className="antialiased">
+        <ErrorBoundary>
+          <AuthProvider>{children}</AuthProvider>
+        </ErrorBoundary>
+      </body>
     </html>
   )
 }
