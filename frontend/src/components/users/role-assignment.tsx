@@ -58,10 +58,14 @@ export function RoleAssignment({ userId }: RoleAssignmentProps) {
           getRoles(),
           getUserRoles(userId),
         ])
-        setAvailableRoles(all)
-        setAssignedRoles(assigned)
+        // Ensure we always have arrays
+        setAvailableRoles(Array.isArray(all) ? all : [])
+        setAssignedRoles(Array.isArray(assigned) ? assigned : [])
       } catch (error) {
         console.error('Failed to load roles:', error)
+        // Set empty arrays on error
+        setAvailableRoles([])
+        setAssignedRoles([])
         toast({
           title: 'エラー',
           description: 'ロール情報の読み込みに失敗しました',
@@ -81,7 +85,9 @@ export function RoleAssignment({ userId }: RoleAssignmentProps) {
   const handleAssign = async (roleId: string) => {
     try {
       await assignRole(userId, roleId)
-      const role = availableRoles.find(r => r.id === roleId)
+      const role = Array.isArray(availableRoles)
+        ? availableRoles.find(r => r.id === roleId)
+        : undefined
       if (role) {
         setAssignedRoles([...assignedRoles, role])
       }
@@ -127,6 +133,9 @@ export function RoleAssignment({ userId }: RoleAssignmentProps) {
    * Get unassigned roles
    */
   const getUnassignedRoles = () => {
+    if (!Array.isArray(availableRoles) || !Array.isArray(assignedRoles)) {
+      return []
+    }
     const assignedIds = new Set(assignedRoles.map(r => r.id))
     return availableRoles.filter(r => !assignedIds.has(r.id))
   }

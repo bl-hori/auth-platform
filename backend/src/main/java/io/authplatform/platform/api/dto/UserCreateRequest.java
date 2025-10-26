@@ -3,6 +3,7 @@ package io.authplatform.platform.api.dto;
 import io.swagger.v3.oas.annotations.media.Schema;
 import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Pattern;
 import jakarta.validation.constraints.Size;
 import lombok.AllArgsConstructor;
@@ -67,7 +68,7 @@ public class UserCreateRequest {
             example = "123e4567-e89b-12d3-a456-426614174001",
             requiredMode = Schema.RequiredMode.REQUIRED
     )
-    @NotBlank(message = "Organization ID is required")
+    @NotNull(message = "Organization ID is required")
     private UUID organizationId;
 
     /**

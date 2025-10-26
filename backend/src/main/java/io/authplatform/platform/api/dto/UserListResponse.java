@@ -33,7 +33,7 @@ import java.util.List;
         description = "Paginated user list response",
         example = """
                 {
-                  "users": [
+                  "content": [
                     {
                       "id": "123e4567-e89b-12d3-a456-426614174000",
                       "organizationId": "123e4567-e89b-12d3-a456-426614174001",
@@ -61,7 +61,7 @@ public class UserListResponse {
             description = "List of users for the current page",
             requiredMode = Schema.RequiredMode.REQUIRED
     )
-    private List<UserResponse> users;
+    private List<UserResponse> content;
 
     /**
      * Current page number (0-indexed).

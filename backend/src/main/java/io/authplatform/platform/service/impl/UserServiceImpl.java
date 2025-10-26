@@ -140,7 +140,7 @@ public class UserServiceImpl implements UserService {
         long totalElements = userRepository.countNotDeletedByOrganizationId(organizationId);
 
         return UserListResponse.builder()
-                .users(users)
+                .content(users)
                 .page(pageable.getPageNumber())
                 .size(pageable.getPageSize())
                 .totalElements(totalElements)
