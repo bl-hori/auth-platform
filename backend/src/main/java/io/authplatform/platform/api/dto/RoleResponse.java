@@ -8,6 +8,7 @@ import lombok.Data;
 import lombok.NoArgsConstructor;
 
 import java.time.OffsetDateTime;
+import java.util.List;
 import java.util.Map;
 import java.util.UUID;
 
@@ -186,12 +187,32 @@ public class RoleResponse {
     private OffsetDateTime deletedAt;
 
     /**
+     * List of permissions assigned to this role.
+     */
+    @Schema(
+            description = "List of permissions assigned to this role",
+            example = "[]"
+    )
+    private List<PermissionResponse> permissions;
+
+    /**
      * Create a RoleResponse from a Role entity.
      *
      * @param role the role entity
      * @return the role response DTO
      */
     public static RoleResponse fromEntity(Role role) {
+        return fromEntity(role, null);
+    }
+
+    /**
+     * Create a RoleResponse from a Role entity with permissions.
+     *
+     * @param role the role entity
+     * @param permissions the list of permission responses (optional)
+     * @return the role response DTO
+     */
+    public static RoleResponse fromEntity(Role role, List<PermissionResponse> permissions) {
         return RoleResponse.builder()
                 .id(role.getId())
                 .organizationId(role.getOrganization().getId())
@@ -205,6 +226,7 @@ public class RoleResponse {
                 .createdAt(role.getCreatedAt())
                 .updatedAt(role.getUpdatedAt())
                 .deletedAt(role.getDeletedAt())
+                .permissions(permissions)
                 .build();
     }
 }

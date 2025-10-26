@@ -1,5 +1,6 @@
 package io.authplatform.platform.service.impl;
 
+import io.authplatform.platform.api.dto.PermissionResponse;
 import io.authplatform.platform.api.dto.RoleCreateRequest;
 import io.authplatform.platform.api.dto.RoleListResponse;
 import io.authplatform.platform.api.dto.RoleResponse;
@@ -96,7 +97,8 @@ public class RoleServiceImpl implements RoleService {
         role = roleRepository.save(role);
         log.info("Created role with ID: {}", role.getId());
 
-        return RoleResponse.fromEntity(role);
+        // New role has no permissions yet
+        return RoleResponse.fromEntity(role, List.of());
     }
 
     @Override
@@ -107,7 +109,12 @@ public class RoleServiceImpl implements RoleService {
         Role role = roleRepository.findById(roleId)
                 .orElseThrow(() -> new IllegalArgumentException("Role not found: " + roleId));
 
-        return RoleResponse.fromEntity(role);
+        // Load permissions assigned to this role
+        List<PermissionResponse> permissions = rolePermissionRepository.findByRoleId(roleId).stream()
+                .map(rp -> PermissionResponse.fromEntity(rp.getPermission()))
+                .toList();
+
+        return RoleResponse.fromEntity(role, permissions);
     }
 
     @Override
@@ -208,7 +215,12 @@ public class RoleServiceImpl implements RoleService {
         role = roleRepository.save(role);
         log.info("Updated role: {}", roleId);
 
-        return RoleResponse.fromEntity(role);
+        // Load permissions assigned to this role
+        List<PermissionResponse> permissions = rolePermissionRepository.findByRoleId(roleId).stream()
+                .map(rp -> PermissionResponse.fromEntity(rp.getPermission()))
+                .toList();
+
+        return RoleResponse.fromEntity(role, permissions);
     }
 
     @Override
