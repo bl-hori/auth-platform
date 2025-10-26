@@ -62,9 +62,12 @@ export default function RolesPage() {
     setLoading(true)
     try {
       const data = await getRoles()
-      setRoles(data)
+      // Ensure we always have an array
+      setRoles(Array.isArray(data) ? data : [])
     } catch (error) {
       console.error('Failed to load roles:', error)
+      // Set empty array on error
+      setRoles([])
       toast({
         title: 'エラー',
         description: 'ロール情報の読み込みに失敗しました',
@@ -78,12 +81,14 @@ export default function RolesPage() {
   /**
    * Filter roles by search query
    */
-  const filteredRoles = roles.filter(
-    role =>
-      role.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      role.displayName.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      role.description?.toLowerCase().includes(searchQuery.toLowerCase())
-  )
+  const filteredRoles = Array.isArray(roles)
+    ? roles.filter(
+        role =>
+          role.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+          role.displayName.toLowerCase().includes(searchQuery.toLowerCase()) ||
+          role.description?.toLowerCase().includes(searchQuery.toLowerCase())
+      )
+    : []
 
   /**
    * Handle delete role
@@ -93,7 +98,8 @@ export default function RolesPage() {
 
     try {
       await deleteRole(roleToDelete.id)
-      setRoles(roles.filter(r => r.id !== roleToDelete.id))
+      // Safely filter roles
+      setRoles(Array.isArray(roles) ? roles.filter(r => r.id !== roleToDelete.id) : [])
       toast({
         title: '成功',
         description: 'ロールを削除しました',

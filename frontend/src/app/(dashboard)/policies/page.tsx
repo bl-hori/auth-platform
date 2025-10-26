@@ -72,9 +72,12 @@ export default function PoliciesPage() {
         status: statusFilter || undefined,
       }
       const response = await getPolicies(params)
-      setPolicies(response.content)
+      // Ensure we always have an array
+      setPolicies(Array.isArray(response.content) ? response.content : [])
     } catch (error) {
       console.error('Failed to load policies:', error)
+      // Set empty array on error
+      setPolicies([])
       toast({
         title: 'エラー',
         description: 'ポリシー情報の読み込みに失敗しました',
@@ -88,12 +91,14 @@ export default function PoliciesPage() {
   /**
    * Filter policies by search query
    */
-  const filteredPolicies = policies.filter(
-    policy =>
-      policy.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      policy.displayName.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      policy.description?.toLowerCase().includes(searchQuery.toLowerCase())
-  )
+  const filteredPolicies = Array.isArray(policies)
+    ? policies.filter(
+        policy =>
+          policy.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+          policy.displayName.toLowerCase().includes(searchQuery.toLowerCase()) ||
+          policy.description?.toLowerCase().includes(searchQuery.toLowerCase())
+      )
+    : []
 
   /**
    * Handle delete policy
@@ -103,7 +108,8 @@ export default function PoliciesPage() {
 
     try {
       await deletePolicy(policyToDelete.id)
-      setPolicies(policies.filter(p => p.id !== policyToDelete.id))
+      // Safely filter policies
+      setPolicies(Array.isArray(policies) ? policies.filter(p => p.id !== policyToDelete.id) : [])
       toast({
         title: '成功',
         description: 'ポリシーを削除しました',
