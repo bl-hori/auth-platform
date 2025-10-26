@@ -91,6 +91,33 @@ public interface AuditLogService {
     );
 
     /**
+     * Log an administrative action with full details (async).
+     *
+     * <p>Records administrative operations with success/failure status and IP/user agent info.
+     *
+     * @param organizationId the organization ID
+     * @param actorId the user ID performing the action (can be null for API key auth)
+     * @param resourceType the resource type affected
+     * @param resourceId the resource ID affected
+     * @param action the action performed
+     * @param decision the operation result ("SUCCESS" or "FAILURE")
+     * @param decisionReason the reason for failure (if applicable)
+     * @param ipAddress the client IP address
+     * @param userAgent the client user agent
+     */
+    void logAdministrativeAction(
+            UUID organizationId,
+            UUID actorId,
+            String resourceType,
+            String resourceId,
+            String action,
+            String decision,
+            String decisionReason,
+            String ipAddress,
+            String userAgent
+    );
+
+    /**
      * Log a policy change event (async).
      *
      * <p>Records policy create/update/publish/delete events.
