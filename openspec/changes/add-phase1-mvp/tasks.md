@@ -132,12 +132,12 @@
 
 ## 10. Frontend - Audit Log Viewer
 
-- [ ] 10.1 Create audit logs page with filters
-- [ ] 10.2 Implement date range picker
-- [ ] 10.3 Create filter by user/resource/decision
-- [ ] 10.4 Implement audit log detail view
-- [ ] 10.5 Add export to CSV functionality
-- [ ] 10.6 Create real-time updates (polling)
+- [x] 10.1 Create audit logs page with filters
+- [x] 10.2 Implement date range picker
+- [x] 10.3 Create filter by user/resource/decision
+- [x] 10.4 Implement audit log detail view
+- [x] 10.5 Add export to CSV functionality
+- [x] 10.6 Create real-time updates (polling)
 
 ## 11. API Documentation
 
