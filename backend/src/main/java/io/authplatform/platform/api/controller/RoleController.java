@@ -1,11 +1,9 @@
 package io.authplatform.platform.api.controller;
 
+import io.authplatform.platform.api.dto.PermissionAssignRequest;
 import io.authplatform.platform.api.dto.RoleCreateRequest;
-import io.authplatform.platform.api.security.CurrentOrganizationId;
 import io.authplatform.platform.api.dto.RoleListResponse;
-import io.authplatform.platform.api.security.CurrentOrganizationId;
 import io.authplatform.platform.api.dto.RoleResponse;
-import io.authplatform.platform.api.security.CurrentOrganizationId;
 import io.authplatform.platform.api.dto.RoleUpdateRequest;
 import io.authplatform.platform.api.security.CurrentOrganizationId;
 import io.authplatform.platform.service.RoleService;
@@ -275,5 +273,77 @@ public class RoleController {
     ) {
         log.info("Deleting role: {}", roleId);
         roleService.deleteRole(roleId);
+    }
+
+    /**
+     * Assign a permission to a role.
+     *
+     * @param roleId the role ID
+     * @param request the permission assignment request
+     */
+    @PostMapping(
+            value = "/{roleId}/permissions",
+            consumes = MediaType.APPLICATION_JSON_VALUE
+    )
+    @ResponseStatus(HttpStatus.NO_CONTENT)
+    @Operation(
+            summary = "Assign permission to role",
+            description = "Assigns a permission to a role, granting the permission to users with this role"
+    )
+    @ApiResponses(value = {
+            @ApiResponse(
+                    responseCode = "204",
+                    description = "Permission assigned successfully"
+            ),
+            @ApiResponse(
+                    responseCode = "404",
+                    description = "Role or permission not found"
+            ),
+            @ApiResponse(
+                    responseCode = "409",
+                    description = "Permission already assigned or organization mismatch"
+            )
+    })
+    public void assignPermission(
+            @Parameter(description = "Role ID", required = true)
+            @PathVariable UUID roleId,
+
+            @Valid @RequestBody PermissionAssignRequest request
+    ) {
+        log.info("Assigning permission {} to role {}", request.getPermissionId(), roleId);
+        roleService.assignPermissionToRole(roleId, request.getPermissionId());
+    }
+
+    /**
+     * Remove a permission from a role.
+     *
+     * @param roleId the role ID
+     * @param permissionId the permission ID
+     */
+    @DeleteMapping("/{roleId}/permissions/{permissionId}")
+    @ResponseStatus(HttpStatus.NO_CONTENT)
+    @Operation(
+            summary = "Remove permission from role",
+            description = "Removes a permission from a role, revoking the permission from users with this role"
+    )
+    @ApiResponses(value = {
+            @ApiResponse(
+                    responseCode = "204",
+                    description = "Permission removed successfully"
+            ),
+            @ApiResponse(
+                    responseCode = "404",
+                    description = "Role, permission, or assignment not found"
+            )
+    })
+    public void removePermission(
+            @Parameter(description = "Role ID", required = true)
+            @PathVariable UUID roleId,
+
+            @Parameter(description = "Permission ID", required = true)
+            @PathVariable UUID permissionId
+    ) {
+        log.info("Removing permission {} from role {}", permissionId, roleId);
+        roleService.removePermissionFromRole(roleId, permissionId);
     }
 }

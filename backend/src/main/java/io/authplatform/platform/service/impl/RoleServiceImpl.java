@@ -1,12 +1,17 @@
 package io.authplatform.platform.service.impl;
 
+import io.authplatform.platform.api.dto.PermissionResponse;
 import io.authplatform.platform.api.dto.RoleCreateRequest;
 import io.authplatform.platform.api.dto.RoleListResponse;
 import io.authplatform.platform.api.dto.RoleResponse;
 import io.authplatform.platform.api.dto.RoleUpdateRequest;
 import io.authplatform.platform.domain.entity.Organization;
+import io.authplatform.platform.domain.entity.Permission;
 import io.authplatform.platform.domain.entity.Role;
+import io.authplatform.platform.domain.entity.RolePermission;
 import io.authplatform.platform.domain.repository.OrganizationRepository;
+import io.authplatform.platform.domain.repository.PermissionRepository;
+import io.authplatform.platform.domain.repository.RolePermissionRepository;
 import io.authplatform.platform.domain.repository.RoleRepository;
 import io.authplatform.platform.service.RoleService;
 import lombok.RequiredArgsConstructor;
@@ -37,6 +42,8 @@ public class RoleServiceImpl implements RoleService {
 
     private final RoleRepository roleRepository;
     private final OrganizationRepository organizationRepository;
+    private final PermissionRepository permissionRepository;
+    private final RolePermissionRepository rolePermissionRepository;
 
     @Override
     public RoleResponse createRole(RoleCreateRequest request) {
@@ -90,7 +97,8 @@ public class RoleServiceImpl implements RoleService {
         role = roleRepository.save(role);
         log.info("Created role with ID: {}", role.getId());
 
-        return RoleResponse.fromEntity(role);
+        // New role has no permissions yet
+        return RoleResponse.fromEntity(role, List.of());
     }
 
     @Override
@@ -101,7 +109,12 @@ public class RoleServiceImpl implements RoleService {
         Role role = roleRepository.findById(roleId)
                 .orElseThrow(() -> new IllegalArgumentException("Role not found: " + roleId));
 
-        return RoleResponse.fromEntity(role);
+        // Load permissions assigned to this role
+        List<PermissionResponse> permissions = rolePermissionRepository.findByRoleId(roleId).stream()
+                .map(rp -> PermissionResponse.fromEntity(rp.getPermission()))
+                .toList();
+
+        return RoleResponse.fromEntity(role, permissions);
     }
 
     @Override
@@ -202,7 +215,12 @@ public class RoleServiceImpl implements RoleService {
         role = roleRepository.save(role);
         log.info("Updated role: {}", roleId);
 
-        return RoleResponse.fromEntity(role);
+        // Load permissions assigned to this role
+        List<PermissionResponse> permissions = rolePermissionRepository.findByRoleId(roleId).stream()
+                .map(rp -> PermissionResponse.fromEntity(rp.getPermission()))
+                .toList();
+
+        return RoleResponse.fromEntity(role, permissions);
     }
 
     @Override
@@ -240,5 +258,61 @@ public class RoleServiceImpl implements RoleService {
         // Check if newParent is a descendant of role
         List<Role> descendants = roleRepository.findAllDescendants(role.getId());
         return descendants.stream().anyMatch(d -> d.getId().equals(newParent.getId()));
+    }
+
+    @Override
+    public void assignPermissionToRole(UUID roleId, UUID permissionId) {
+        log.info("Assigning permission {} to role {}", permissionId, roleId);
+
+        // Validate role exists and is not deleted
+        Role role = roleRepository.findByIdAndNotDeleted(roleId)
+                .orElseThrow(() -> new IllegalArgumentException("Role not found or deleted: " + roleId));
+
+        // Validate permission exists
+        Permission permission = permissionRepository.findById(permissionId)
+                .orElseThrow(() -> new IllegalArgumentException("Permission not found: " + permissionId));
+
+        // Validate both belong to the same organization
+        if (!role.getOrganization().getId().equals(permission.getOrganization().getId())) {
+            throw new IllegalStateException(
+                    "Role and permission must belong to the same organization");
+        }
+
+        // Check if permission is already assigned
+        if (rolePermissionRepository.existsByRoleIdAndPermissionId(roleId, permissionId)) {
+            throw new IllegalStateException(
+                    String.format("Permission %s is already assigned to role %s", permissionId, roleId));
+        }
+
+        // Create role-permission assignment
+        RolePermission rolePermission = RolePermission.builder()
+                .role(role)
+                .permission(permission)
+                .build();
+
+        rolePermissionRepository.save(rolePermission);
+        log.info("Successfully assigned permission {} to role {}", permissionId, roleId);
+    }
+
+    @Override
+    public void removePermissionFromRole(UUID roleId, UUID permissionId) {
+        log.info("Removing permission {} from role {}", permissionId, roleId);
+
+        // Validate role exists
+        Role role = roleRepository.findById(roleId)
+                .orElseThrow(() -> new IllegalArgumentException("Role not found: " + roleId));
+
+        // Validate permission exists
+        Permission permission = permissionRepository.findById(permissionId)
+                .orElseThrow(() -> new IllegalArgumentException("Permission not found: " + permissionId));
+
+        // Validate assignment exists
+        RolePermission rolePermission = rolePermissionRepository.findByRoleIdAndPermissionId(roleId, permissionId)
+                .orElseThrow(() -> new IllegalArgumentException(
+                        String.format("Permission %s is not assigned to role %s", permissionId, roleId)));
+
+        // Delete the assignment
+        rolePermissionRepository.delete(rolePermission);
+        log.info("Successfully removed permission {} from role {}", permissionId, roleId);
     }
 }
