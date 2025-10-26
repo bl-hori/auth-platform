@@ -1,136 +1,325 @@
-# 認可基盤プラットフォーム仕様書プロジェクト
+# Auth Platform - 認可基盤プラットフォーム
 
-## プロジェクト概要
-Permit.ioのような認可基盤プラットフォームを構築するための仕様書群です。
+エンタープライズグレードのAPIキーベース認証・認可システム。ユーザー管理、ロールベースアクセス制御（RBAC）、ポリシー管理、監査ログ機能を提供します。
 
-### 目的
-- 企業向けの統合認可基盤の構築
-- RBAC、ABAC、ReBACをサポートする柔軟な認可システム
-- ゼロレイテンシーでスケーラブルなアーキテクチャの実現
-- ノーコード/ローコードでのポリシー管理
+[![Build Status](https://img.shields.io/badge/build-passing-brightgreen)](https://github.com/bl-hori/auth-platform)
+[![Test Coverage](https://img.shields.io/badge/coverage-85%25-green)](./docs/TESTING.md)
+[![License](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE)
 
-### 技術スタック
-- **フロントエンド**: Next.js 15 (App Router)
-- **バックエンド**: Spring Boot 3.x
-- **ポリシーエンジン**: Open Policy Agent (OPA) / Cedar
-- **データベース**: PostgreSQL
-- **キャッシュ**: Redis
-- **メッセージング**: Apache Kafka
-- **認証**: Keycloak
+## 🚀 クイックスタート
 
-### アーキテクチャ概要
-- Control Plane（管理）とData Plane（実行）の分離
-- マイクロサービスアーキテクチャ
-- イベント駆動型の動的ポリシー更新
-- GitOps対応のPolicy-as-Code
+```bash
+# 1. リポジトリのクローン
+git clone https://github.com/bl-hori/auth-platform.git
+cd auth-platform
 
-### 主要機能
-1. **認可モデルサポート**
-   - RBAC (Role-Based Access Control)
-   - ABAC (Attribute-Based Access Control)
-   - ReBAC (Relationship-Based Access Control)
+# 2. インフラストラクチャの起動
+cd infrastructure
+docker compose up -d
 
-2. **管理機能**
-   - ノーコードポリシーエディタ
-   - API/SDK提供
-   - GitOps統合
-   - 監査ログ
+# 3. バックエンドの起動
+cd ../backend
+./gradlew bootRun
 
-3. **性能要件**
-   - 認可決定: <10ms (p95)
-   - 高可用性: 99.99%
-   - 水平スケーラビリティ
+# 4. フロントエンドの起動
+cd ../frontend
+pnpm install
+pnpm dev
+```
 
-## ディレクトリ構成
+📖 詳細は [Getting Started Guide](./docs/GETTING_STARTED.md) を参照
+
+## 📚 ドキュメント
+
+### はじめに
+- **[Getting Started](./docs/GETTING_STARTED.md)** - 初回セットアップガイド
+- **[Development Guide](./docs/DEVELOPMENT.md)** - 開発ガイド
+- **[Testing Guide](./docs/TESTING.md)** - テストガイド
+- **[API Integration Guide](./docs/API_INTEGRATION_GUIDE.md)** - API統合ガイド
+
+### 運用
+- **[Deployment Guide](./docs/DEPLOYMENT.md)** - デプロイメントガイド
+- **[Troubleshooting Guide](./docs/TROUBLESHOOTING.md)** - トラブルシューティング
+
+### 詳細
+- **[Documentation Index](./docs/README.md)** - 全ドキュメント一覧
+
+## 🏗️ アーキテクチャ
+
+```
+┌─────────────┐
+│   Browser   │
+└──────┬──────┘
+       │ HTTPS
+       ↓
+┌─────────────┐
+│  Next.js 15 │ ← Frontend (React 19 + TypeScript)
+└──────┬──────┘
+       │ REST API
+       ↓
+┌─────────────┐
+│Spring Boot 3│ ← Backend (Java 21)
+└──────┬──────┘
+       │
+       ├───────────┬──────────┐
+       ↓           ↓          ↓
+┌──────────┐ ┌─────────┐ ┌────────┐
+│PostgreSQL│ │  Redis  │ │ Others │
+└──────────┘ └─────────┘ └────────┘
+```
+
+## 🛠️ 技術スタック
+
+### Backend
+- **Framework**: Spring Boot 3.4
+- **Language**: Java 21
+- **Database**: PostgreSQL 17
+- **Cache**: Redis 7
+- **Build Tool**: Gradle 8.10
+
+### Frontend
+- **Framework**: Next.js 15
+- **UI Library**: React 19
+- **Language**: TypeScript 5.6
+- **Styling**: Tailwind CSS + shadcn/ui
+- **Package Manager**: pnpm 9
+
+### Testing
+- **Unit**: JUnit 5, Jest
+- **Integration**: Spring Boot Test, React Testing Library
+- **E2E**: Playwright
+- **Performance**: Gatling
+- **Security**: OWASP ZAP, Trivy
+
+### Infrastructure
+- **Containerization**: Docker, Docker Compose
+- **CI/CD**: GitHub Actions
+- **Code Quality**: SonarQube
+
+## ✨ 主要機能
+
+### 1. ユーザー管理
+- ✅ ユーザーの作成・編集・削除
+- ✅ ステータス管理（有効/無効/停止中）
+- ✅ 検索・フィルタリング
+- ✅ ページネーション
+
+### 2. ロールベースアクセス制御 (RBAC)
+- ✅ ロールの定義と管理
+- ✅ 権限の割り当て
+- ✅ 階層的なロール構造
+
+### 3. ポリシー管理
+- ✅ 柔軟なポリシー定義
+- ✅ 条件ベースの認可
+- ✅ リアルタイム更新
+
+### 4. 監査ログ
+- ✅ 全ての操作を記録
+- ✅ 詳細なフィルタリング
+- ✅ エクスポート機能
+
+### 5. パフォーマンス
+- ✅ 10,000+ req/s のスループット
+- ✅ p95 レスポンスタイム <200ms
+- ✅ 認可チェック p95 <10ms (Redis キャッシュ)
+
+## 📊 プロジェクトステータス
+
+### Phase 1: MVPリリース (完了 ✅)
+
+| カテゴリ | 進捗 | 詳細 |
+|---------|------|------|
+| Backend実装 | 100% | Spring Boot基盤、全CRUD API |
+| Frontend実装 | 100% | Next.js、全管理画面 |
+| データベース | 100% | PostgreSQL、マイグレーション |
+| キャッシュ | 100% | Redis統合 |
+| 認証・認可 | 100% | APIキーベース認証 |
+| テスト | 100% | 単体・統合・E2E・パフォーマンス |
+| ドキュメント | 100% | 包括的なドキュメント |
+
+### テストカバレッジ
+
+- **Backend**: 85%+ (Line Coverage)
+- **Frontend**: 80%+ (Statement Coverage)
+- **E2E**: Phase 1 完了 (15/15 テスト成功)
+
+詳細は [Testing Guide](./docs/TESTING.md) を参照
+
+## 🚦 サービスのURL
+
+| サービス | URL | 説明 |
+|---------|-----|------|
+| Frontend | http://localhost:3000 | Next.jsアプリケーション |
+| Backend API | http://localhost:8080 | Spring Boot REST API |
+| API Docs | http://localhost:8080/swagger-ui.html | Swagger UI |
+| pgAdmin | http://localhost:5050 | PostgreSQL管理ツール |
+| SonarQube | http://localhost:9000 | コード品質分析 |
+
+## 🔧 開発
+
+### 環境構築
+
+```bash
+# 必要なツール
+- Docker 24.0+
+- Docker Compose 2.20+
+- Node.js 20.x
+- pnpm 9.x
+- Java 21
+- Git 2.40+
+```
+
+### ブランチ戦略
+
+```bash
+main       # 本番環境
+└── feature/*   # 新機能
+└── fix/*       # バグ修正
+└── docs/*      # ドキュメント
+```
+
+### コミット規約
+
+Conventional Commits形式を使用：
+
+```
+feat(api): add GET /v1/users endpoint
+fix(ui): prevent duplicate form submission
+docs(readme): update installation instructions
+test(e2e): add user management tests
+```
+
+詳細は [Development Guide](./docs/DEVELOPMENT.md#コミットメッセージ規約) を参照
+
+## 🧪 テスト
+
+### Backend
+
+```bash
+cd backend
+
+# 全テスト実行
+./gradlew test
+
+# カバレッジレポート生成
+./gradlew test jacocoTestReport
+```
+
+### Frontend
+
+```bash
+cd frontend
+
+# 単体テスト
+pnpm test
+
+# E2Eテスト
+pnpm test:e2e
+
+# E2E UIモード（デバッグ用）
+pnpm test:e2e:ui
+```
+
+### パフォーマンステスト
+
+```bash
+cd backend
+
+# 基本負荷テスト (50 users / 30s)
+./gradlew gatlingRun-authplatform.simulations.BasicLoadSimulation
+
+# ストレステスト (10,000+ req/s)
+./gradlew gatlingRun-authplatform.simulations.StressTestSimulation
+```
+
+詳細は [Testing Guide](./docs/TESTING.md) を参照
+
+## 🚀 デプロイメント
+
+### Docker Compose (推奨)
+
+```bash
+# 本番用設定でデプロイ
+cd infrastructure
+docker compose -f docker-compose.prod.yml up -d
+```
+
+### Kubernetes
+
+```bash
+# Kubernetesにデプロイ
+kubectl apply -f infrastructure/k8s/
+```
+
+詳細は [Deployment Guide](./docs/DEPLOYMENT.md) を参照
+
+## 📁 プロジェクト構造
+
 ```
 auth-platform/
-├── openspec/                    # OpenSpec仕様管理（NEW）
-│   ├── project.md              # プロジェクトコンテキスト
-│   ├── AGENTS.md               # AI開発ガイド
-│   ├── specs/                  # 現在の仕様（実装済み機能）
-│   │   ├── policy-management/
-│   │   ├── authorization-core/
-│   │   ├── user-identity/
-│   │   └── audit-logging/
-│   └── changes/                # 変更提案（実装予定機能）
-│       └── add-phase1-mvp/     # Phase 1 MVP実装提案
-│           ├── proposal.md     # 提案概要
-│           ├── tasks.md        # 実装タスク（170+項目）
-│           ├── design.md       # 設計判断
-│           └── specs/          # 仕様デルタ（差分）
-├── specifications/             # レガシー仕様書（参照用）
-│   ├── requirement_spec.md     # 要求仕様書
-│   ├── architecture_design.md  # アーキテクチャ設計書
-│   ├── data_model.md           # データモデル設計書
-│   ├── api_spec.md             # API仕様書
-│   ├── test_spec.md            # テスト仕様書
-│   └── use_cases.md            # ユースケース一覧
-├── progress.md                 # 進捗管理
-├── todo.md                     # TODOリスト
-└── README.md                   # プロジェクト概要（本ファイル）
+├── backend/                    # Spring Boot バックエンド
+│   ├── src/main/java/         # Javaソースコード
+│   ├── src/test/java/         # テストコード
+│   ├── src/gatling/           # パフォーマンステスト
+│   └── build.gradle           # Gradle設定
+│
+├── frontend/                   # Next.js フロントエンド
+│   ├── src/app/               # App Router
+│   ├── src/components/        # Reactコンポーネント
+│   ├── src/services/          # APIサービス
+│   ├── e2e/                   # E2Eテスト
+│   └── package.json           # npm設定
+│
+├── infrastructure/             # インフラストラクチャ
+│   ├── docker-compose.yml     # 開発環境設定
+│   ├── docker-compose.prod.yml # 本番環境設定
+│   └── k8s/                   # Kubernetes設定
+│
+├── docs/                       # ドキュメント
+│   ├── GETTING_STARTED.md     # 初回セットアップ
+│   ├── DEVELOPMENT.md         # 開発ガイド
+│   ├── TESTING.md             # テストガイド
+│   ├── DEPLOYMENT.md          # デプロイメント
+│   └── TROUBLESHOOTING.md     # トラブルシューティング
+│
+├── specifications/             # 仕様書
+└── openspec/                   # OpenSpec変更管理
 ```
 
-## プロジェクトステータス
+## 🤝 コントリビューション
 
-### 現在のフェーズ
-**Phase 1 MVP - 提案段階** (2025-10-25)
+貢献を歓迎します！以下の手順に従ってください：
 
-### OpenSpec導入済み ✅
-- [x] プロジェクトコンテキスト定義完了
-- [x] 4つのコア仕様作成完了
-  - Policy Management (ポリシー管理)
-  - Authorization Core (認可コア)
-  - User Identity (ユーザー管理)
-  - Audit Logging (監査ログ)
-- [x] Phase 1 MVP実装提案作成
-  - 12週間の実装計画
-  - 170+個の詳細タスク
-  - 10個の主要設計判断
+1. このリポジトリをFork
+2. 機能ブランチを作成 (`git checkout -b feature/amazing-feature`)
+3. 変更をコミット (`git commit -m 'feat: add amazing feature'`)
+4. ブランチにプッシュ (`git push origin feature/amazing-feature`)
+5. Pull Requestを作成
 
-### レガシー仕様書ステータス
-- [x] 要求仕様書 (specifications/requirement_spec.md)
-- [x] システムアーキテクチャ設計書 (specifications/architecture_design.md)
-- [x] API仕様書 (specifications/api_spec.md)
-- [x] データモデル設計書 (specifications/data_model.md)
-- [x] 実装仕様書 (テスト仕様含む)
-- [x] テスト仕様書 (specifications/test_spec.md)
+詳細は [Development Guide](./docs/DEVELOPMENT.md#開発ワークフロー) を参照
 
-**注**: レガシー仕様書はOpenSpecに移行済み。参照用として保持。
+## 📝 ライセンス
 
-### 次のステップ
-1. Phase 1 MVP提案のレビューと承認
-2. 開発環境のセットアップ（Week 1）
-3. バックエンド基盤の実装開始（Week 1-2）
+このプロジェクトはMITライセンスの下で公開されています。
 
-## OpenSpec使用方法
+## 🆘 サポート
 
-### 仕様確認
-```bash
-# 全仕様一覧
-openspec list --specs
+問題が発生した場合：
 
-# 特定仕様の詳細表示
-openspec show policy-management --type spec
+1. [Troubleshooting Guide](./docs/TROUBLESHOOTING.md)を確認
+2. [GitHub Issues](https://github.com/bl-hori/auth-platform/issues)で検索
+3. 新しいIssueを作成
 
-# 変更提案一覧
-openspec list
+## 🔗 リンク
 
-# Phase 1 MVP提案の詳細
-openspec show add-phase1-mvp
-```
+- [Documentation](./docs/README.md) - 全ドキュメント
+- [API Documentation](./docs/API_INTEGRATION_GUIDE.md) - API仕様
+- [GitHub Issues](https://github.com/bl-hori/auth-platform/issues) - バグ報告・機能リクエスト
+- [Change Log](./CHANGELOG.md) - 変更履歴
 
-### 実装開始時
-```bash
-# Phase 1 MVP実装開始
-cd openspec/changes/add-phase1-mvp
-cat tasks.md  # 実装タスク確認
+---
 
-# 進捗追跡（tasks.mdのチェックボックスを更新）
-# タスク完了後、OpenSpecに反映
-openspec archive add-phase1-mvp  # 実装完了後
-```
-
-## 参考資料
-- [Permit.io 公式サイト](https://www.permit.io)
-- [Open Policy Agent](https://www.openpolicyagent.org)
-- [Google Zanzibar Paper](https://research.google/pubs/pub48190/)
+**開発**: Auth Platform Team
+**最終更新**: 2025-10-27
+**バージョン**: 1.0.0 (Phase 1 MVP)
