@@ -45,9 +45,12 @@ export default function NewRolePage() {
     const loadRoles = async () => {
       try {
         const data = await getRoles()
-        setRoles(data)
+        // Ensure we always have an array
+        setRoles(Array.isArray(data) ? data : [])
       } catch (error) {
         console.error('Failed to load roles:', error)
+        // Set empty array on error
+        setRoles([])
       }
     }
     loadRoles()
@@ -214,11 +217,12 @@ export default function NewRolePage() {
                 className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
               >
                 <option value="">親ロールを選択...</option>
-                {roles.map(role => (
-                  <option key={role.id} value={role.id}>
-                    {role.displayName}
-                  </option>
-                ))}
+                {Array.isArray(roles) &&
+                  roles.map(role => (
+                    <option key={role.id} value={role.id}>
+                      {role.displayName}
+                    </option>
+                  ))}
               </select>
               <p className="text-sm text-muted-foreground">
                 親ロールの権限を継承します
