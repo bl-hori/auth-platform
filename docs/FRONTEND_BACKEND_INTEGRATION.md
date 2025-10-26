@@ -17,17 +17,26 @@ cd backend
 
 ### 2. フロントエンドの設定
 
-`.env.local` ファイルを作成 (既に存在する場合は編集):
+`.env.local` ファイルを作成:
 
 ```bash
+# frontend/.env.local.exampleをコピー
+cp frontend/.env.local.example frontend/.env.local
+
+# または手動で作成
+cat > frontend/.env.local << EOF
 # Backend API Configuration
 NEXT_PUBLIC_API_URL=http://localhost:8080
 NEXT_PUBLIC_API_KEY=dev-key-org1-abc123
 
 # Mock API Control
-# Set to 'false' to use real backend API, 'true' or omit to use mock data
+# Set to 'false' to use real backend API
 NEXT_PUBLIC_USE_MOCK_API=false
+EOF
 ```
+
+**重要**: `NEXT_PUBLIC_USE_MOCK_API=false` を設定して実際のバックエンドAPIを使用します。
+この設定を省略すると、デフォルトでモックデータが使用されます。
 
 ### 3. フロントエンドの起動
 
