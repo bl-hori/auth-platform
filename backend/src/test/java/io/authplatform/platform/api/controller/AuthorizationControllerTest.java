@@ -3,6 +3,8 @@ package io.authplatform.platform.api.controller;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import io.authplatform.platform.api.dto.AuthorizationRequest;
 import io.authplatform.platform.api.dto.AuthorizationResponse;
+import io.authplatform.platform.api.dto.BatchAuthorizationRequest;
+import io.authplatform.platform.api.dto.BatchAuthorizationResponse;
 import io.authplatform.platform.config.ApiKeyProperties;
 import io.authplatform.platform.service.AuthorizationService;
 import org.junit.jupiter.api.BeforeEach;
@@ -16,9 +18,12 @@ import org.springframework.http.MediaType;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.web.servlet.MockMvc;
 
+import java.util.Arrays;
+import java.util.List;
 import java.util.UUID;
 
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyList;
 import static org.mockito.Mockito.when;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
@@ -256,5 +261,230 @@ class AuthorizationControllerTest {
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(""))
                 .andExpect(status().isBadRequest());
+    }
+
+    // ===== Batch Authorization Tests =====
+
+    @Test
+    @DisplayName("Should process batch authorization successfully")
+    void shouldProcessBatchAuthorizationSuccessfully() throws Exception {
+        // Given
+        AuthorizationRequest request1 = AuthorizationRequest.builder()
+                .organizationId(testOrgId)
+                .principal(AuthorizationRequest.Principal.builder()
+                        .id("user-123")
+                        .type("user")
+                        .build())
+                .action("read")
+                .resource(AuthorizationRequest.Resource.builder()
+                        .type("document")
+                        .id("doc-1")
+                        .build())
+                .build();
+
+        AuthorizationRequest request2 = AuthorizationRequest.builder()
+                .organizationId(testOrgId)
+                .principal(AuthorizationRequest.Principal.builder()
+                        .id("user-123")
+                        .type("user")
+                        .build())
+                .action("write")
+                .resource(AuthorizationRequest.Resource.builder()
+                        .type("document")
+                        .id("doc-2")
+                        .build())
+                .build();
+
+        BatchAuthorizationRequest batchRequest = BatchAuthorizationRequest.builder()
+                .requests(Arrays.asList(request1, request2))
+                .build();
+
+        AuthorizationResponse response1 = AuthorizationResponse.builder()
+                .decision(AuthorizationResponse.Decision.ALLOW)
+                .reason("User has read permission")
+                .evaluationTimeMs(3L)
+                .build();
+
+        AuthorizationResponse response2 = AuthorizationResponse.builder()
+                .decision(AuthorizationResponse.Decision.DENY)
+                .reason("User lacks write permission")
+                .evaluationTimeMs(2L)
+                .build();
+
+        when(authorizationService.authorizeBatch(anyList()))
+                .thenReturn(Arrays.asList(response1, response2));
+
+        // When/Then
+        mockMvc.perform(post("/v1/authorize/batch")
+                        .header("X-API-Key", validApiKey)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(batchRequest)))
+                .andExpect(status().isOk())
+                .andExpect(content().contentType(MediaType.APPLICATION_JSON))
+                .andExpect(jsonPath("$.responses").isArray())
+                .andExpect(jsonPath("$.responses.length()").value(2))
+                .andExpect(jsonPath("$.responses[0].decision").value("ALLOW"))
+                .andExpect(jsonPath("$.responses[0].reason").value("User has read permission"))
+                .andExpect(jsonPath("$.responses[1].decision").value("DENY"))
+                .andExpect(jsonPath("$.responses[1].reason").value("User lacks write permission"))
+                .andExpect(jsonPath("$.totalEvaluationTimeMs").isNumber());
+    }
+
+    @Test
+    @DisplayName("Should reject batch request with empty requests list")
+    void shouldRejectBatchRequestWithEmptyList() throws Exception {
+        // Given
+        BatchAuthorizationRequest batchRequest = BatchAuthorizationRequest.builder()
+                .requests(List.of())
+                .build();
+
+        // When/Then
+        mockMvc.perform(post("/v1/authorize/batch")
+                        .header("X-API-Key", validApiKey)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(batchRequest)))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.title").value("Bad Request"))
+                .andExpect(jsonPath("$.errors.requests").exists());
+    }
+
+    @Test
+    @DisplayName("Should reject batch request exceeding size limit")
+    void shouldRejectBatchRequestExceedingSizeLimit() throws Exception {
+        // Given - Create 101 requests (exceeds 100 limit)
+        List<AuthorizationRequest> requests = new java.util.ArrayList<>();
+        for (int i = 0; i < 101; i++) {
+            requests.add(AuthorizationRequest.builder()
+                    .organizationId(testOrgId)
+                    .principal(AuthorizationRequest.Principal.builder()
+                            .id("user-" + i)
+                            .type("user")
+                            .build())
+                    .action("read")
+                    .resource(AuthorizationRequest.Resource.builder()
+                            .type("document")
+                            .id("doc-" + i)
+                            .build())
+                    .build());
+        }
+
+        BatchAuthorizationRequest batchRequest = BatchAuthorizationRequest.builder()
+                .requests(requests)
+                .build();
+
+        // When/Then
+        mockMvc.perform(post("/v1/authorize/batch")
+                        .header("X-API-Key", validApiKey)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(batchRequest)))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.title").value("Bad Request"))
+                .andExpect(jsonPath("$.errors.requests").exists());
+    }
+
+    @Test
+    @DisplayName("Should reject batch request with invalid nested request")
+    void shouldRejectBatchRequestWithInvalidNestedRequest() throws Exception {
+        // Given - Missing action in second request
+        AuthorizationRequest validRequest = AuthorizationRequest.builder()
+                .organizationId(testOrgId)
+                .principal(AuthorizationRequest.Principal.builder()
+                        .id("user-123")
+                        .type("user")
+                        .build())
+                .action("read")
+                .resource(AuthorizationRequest.Resource.builder()
+                        .type("document")
+                        .id("doc-1")
+                        .build())
+                .build();
+
+        AuthorizationRequest invalidRequest = AuthorizationRequest.builder()
+                .organizationId(testOrgId)
+                .principal(AuthorizationRequest.Principal.builder()
+                        .id("user-123")
+                        .type("user")
+                        .build())
+                // Missing action
+                .resource(AuthorizationRequest.Resource.builder()
+                        .type("document")
+                        .id("doc-2")
+                        .build())
+                .build();
+
+        BatchAuthorizationRequest batchRequest = BatchAuthorizationRequest.builder()
+                .requests(Arrays.asList(validRequest, invalidRequest))
+                .build();
+
+        // When/Then
+        mockMvc.perform(post("/v1/authorize/batch")
+                        .header("X-API-Key", validApiKey)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(batchRequest)))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.title").value("Bad Request"))
+                .andExpect(jsonPath("$.errors['requests[1].action']").exists());
+    }
+
+    @Test
+    @DisplayName("Should reject batch request without API key")
+    void shouldRejectBatchRequestWithoutApiKey() throws Exception {
+        // Given
+        BatchAuthorizationRequest batchRequest = BatchAuthorizationRequest.builder()
+                .requests(List.of(validRequest))
+                .build();
+
+        // When/Then
+        mockMvc.perform(post("/v1/authorize/batch")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(batchRequest)))
+                .andExpect(status().isUnauthorized());
+    }
+
+    @Test
+    @DisplayName("Should process large valid batch")
+    void shouldProcessLargeValidBatch() throws Exception {
+        // Given - Create 50 valid requests
+        List<AuthorizationRequest> requests = new java.util.ArrayList<>();
+        List<AuthorizationResponse> responses = new java.util.ArrayList<>();
+
+        for (int i = 0; i < 50; i++) {
+            requests.add(AuthorizationRequest.builder()
+                    .organizationId(testOrgId)
+                    .principal(AuthorizationRequest.Principal.builder()
+                            .id("user-" + i)
+                            .type("user")
+                            .build())
+                    .action("read")
+                    .resource(AuthorizationRequest.Resource.builder()
+                            .type("document")
+                            .id("doc-" + i)
+                            .build())
+                    .build());
+
+            responses.add(AuthorizationResponse.builder()
+                    .decision(i % 2 == 0 ? AuthorizationResponse.Decision.ALLOW : AuthorizationResponse.Decision.DENY)
+                    .reason("Test decision " + i)
+                    .evaluationTimeMs(2L)
+                    .build());
+        }
+
+        BatchAuthorizationRequest batchRequest = BatchAuthorizationRequest.builder()
+                .requests(requests)
+                .build();
+
+        when(authorizationService.authorizeBatch(anyList()))
+                .thenReturn(responses);
+
+        // When/Then
+        mockMvc.perform(post("/v1/authorize/batch")
+                        .header("X-API-Key", validApiKey)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(batchRequest)))
+                .andExpect(status().isOk())
+                .andExpect(content().contentType(MediaType.APPLICATION_JSON))
+                .andExpect(jsonPath("$.responses").isArray())
+                .andExpect(jsonPath("$.responses.length()").value(50))
+                .andExpect(jsonPath("$.totalEvaluationTimeMs").isNumber());
     }
 }
