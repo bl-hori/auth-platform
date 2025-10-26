@@ -1,0 +1,12 @@
+# IMPORTANT: Never commit actual secrets!
+secrets.yaml
+
+# Ignore environment-specific overrides (if they contain secrets)
+*/secrets*.yaml
+
+# Helm values with secrets
+values-*.yaml
+
+# Temporary files
+*.tmp
+*.bak

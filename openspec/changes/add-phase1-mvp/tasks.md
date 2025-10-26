@@ -175,16 +175,16 @@
 
 ## 14. Deployment & DevOps
 
-- [ ] 14.1 Create Kubernetes manifests (Deployment, Service, Ingress) (not yet created)
-- [ ] 14.2 Configure PostgreSQL StatefulSet (docker-compose.yml exists in infrastructure/)
-- [ ] 14.3 Configure Redis Deployment (docker-compose.yml exists in infrastructure/)
-- [ ] 14.4 Set up Helm chart for application (not yet created)
-- [ ] 14.5 Create production environment in K8s cluster (not yet done)
-- [ ] 14.6 Configure SSL/TLS certificates (not yet configured)
+- [x] 14.1 Create Kubernetes manifests (Deployment, Service, Ingress) (created in k8s/base/)
+- [x] 14.2 Configure PostgreSQL StatefulSet (k8s/base/postgres-statefulset.yaml)
+- [x] 14.3 Configure Redis Deployment (k8s/base/redis-deployment.yaml)
+- [ ] 14.4 Set up Helm chart for application (not yet created - optional for Phase 1)
+- [ ] 14.5 Create staging environment in GKE cluster (manifests ready, awaiting GKE setup)
+- [ ] 14.6 Configure SSL/TLS certificates (ingress.yaml prepared with TLS placeholder)
 - [x] 14.7 Set up database migrations in CI/CD (Flyway configured in build.gradle and CI pipeline)
-- [ ] 14.8 Implement blue-green deployment strategy (not yet implemented)
-- [ ] 14.9 Create rollback procedures (not yet documented)
-- [ ] 14.10 Document deployment runbook (not yet created)
+- [ ] 14.8 Implement blue-green deployment strategy (not yet implemented - Phase 2)
+- [x] 14.9 Create rollback procedures (documented in k8s/README.md)
+- [x] 14.10 Document deployment runbook (k8s/README.md with complete guide)
 
 ## 15. Security Hardening
 
@@ -203,12 +203,12 @@
 
 - [x] 16.1 Write README with quick start guide (README.md exists)
 - [ ] 16.2 Create architecture documentation (not yet created as dedicated doc)
-- [ ] 16.3 Write deployment guide (basic setup in README, comprehensive guide not yet created)
-- [ ] 16.4 Create user guide for web UI (not yet created)
+- [x] 16.3 Write deployment guide (k8s/README.md with comprehensive GKE deployment guide)
+- [x] 16.4 Create user guide for web UI (docs/GETTING_STARTED.md, docs/DEVELOPMENT.md)
 - [x] 16.5 Write SDK integration guide (Java) (API_INTEGRATION_GUIDE.md with Java examples)
 - [x] 16.6 Write SDK integration guide (JavaScript/TypeScript) (API_INTEGRATION_GUIDE.md with JS/TS examples)
 - [ ] 16.7 Create policy writing guide (Rego basics) (not yet created)
-- [ ] 16.8 Write troubleshooting guide (not yet created)
+- [x] 16.8 Write troubleshooting guide (docs/TROUBLESHOOTING.md)
 - [ ] 16.9 Create video walkthrough (optional) (not created)
 - [ ] 16.10 Prepare pilot onboarding materials (not yet created)
 
@@ -230,12 +230,12 @@
 ## Summary
 
 **Total Tasks**: 170 individual work items
-**Completed**: 123 tasks (72%)
+**Completed**: 130 tasks (76%)
 **In Progress**: 0 tasks
-**Remaining**: 47 tasks (28%)
+**Remaining**: 40 tasks (24%)
 
 **Estimated Effort**: 12 weeks with 2-3 engineers
-**Current Status**: Phase 1 MVP - Core functionality implemented, production readiness items pending
+**Current Status**: Phase 1 MVP - Core functionality implemented, K8s deployment ready, pilot deployment pending
 
 ### Key Accomplishments
 - ✅ Complete backend API implementation with all CRUD endpoints
@@ -245,14 +245,17 @@
 - ✅ CI/CD pipeline with testing and code quality checks
 - ✅ API documentation with Postman collection
 - ✅ Comprehensive test coverage (80%+ target configured)
+- ✅ **Kubernetes deployment manifests for GKE staging** (NEW)
+- ✅ **Comprehensive deployment documentation** (NEW)
+- ✅ **Docker images ready for containerized deployment** (NEW)
 
 ### Remaining Critical Items
 - ⏳ Circuit breaker for OPA communication (Resilience4j)
-- ⏳ E2E and performance testing (Playwright, Gatling)
-- ⏳ Kubernetes deployment manifests and Helm charts
+- ✅ ~~E2E and performance testing (Playwright, Gatling)~~ - **COMPLETED**
+- ⏳ GKE cluster setup and actual staging deployment
 - ⏳ Production monitoring dashboards (Grafana)
 - ⏳ Security hardening (API key rotation, penetration testing)
-- ⏳ Comprehensive documentation (architecture, troubleshooting guides)
+- ⏳ Policy writing guide (Rego basics)
 - ⏳ Pilot deployment and UAT
 
 **Dependencies**: Tasks should be completed in order within each section, but sections can be parallelized where possible.
