@@ -8,6 +8,12 @@ import { apiClient } from '@/lib/api-client'
 import type { User, PagedResponse, UserStatus } from '@/types'
 
 /**
+ * Check if we should use mock data
+ * Set NEXT_PUBLIC_USE_MOCK_API=false to use real backend API
+ */
+const USE_MOCK = process.env.NEXT_PUBLIC_USE_MOCK_API !== 'false'
+
+/**
  * User creation request
  */
 export interface CreateUserRequest {
@@ -48,7 +54,7 @@ export async function getUsers(
   params?: UserListParams
 ): Promise<PagedResponse<User>> {
   // In development, return mock data
-  if (process.env.NODE_ENV === 'development') {
+  if (USE_MOCK) {
     return getMockUsers(params)
   }
 
@@ -65,7 +71,7 @@ export async function getUsers(
  */
 export async function getUser(id: string): Promise<User> {
   // In development, return mock data
-  if (process.env.NODE_ENV === 'development') {
+  if (USE_MOCK) {
     return getMockUser(id)
   }
 
@@ -80,7 +86,7 @@ export async function getUser(id: string): Promise<User> {
  */
 export async function createUser(data: CreateUserRequest): Promise<User> {
   // In development, return mock data
-  if (process.env.NODE_ENV === 'development') {
+  if (USE_MOCK) {
     return createMockUser(data)
   }
 
@@ -99,7 +105,7 @@ export async function updateUser(
   data: UpdateUserRequest
 ): Promise<User> {
   // In development, return mock data
-  if (process.env.NODE_ENV === 'development') {
+  if (USE_MOCK) {
     return updateMockUser(id, data)
   }
 
@@ -113,7 +119,7 @@ export async function updateUser(
  */
 export async function deleteUser(id: string): Promise<void> {
   // In development, simulate deletion
-  if (process.env.NODE_ENV === 'development') {
+  if (USE_MOCK) {
     console.log(`Mock: Deleting user ${id}`)
     return
   }
@@ -132,7 +138,7 @@ export async function assignRole(
   roleId: string
 ): Promise<void> {
   // In development, simulate role assignment
-  if (process.env.NODE_ENV === 'development') {
+  if (USE_MOCK) {
     console.log(`Mock: Assigning role ${roleId} to user ${userId}`)
     return
   }
@@ -151,7 +157,7 @@ export async function removeRole(
   roleId: string
 ): Promise<void> {
   // In development, simulate role removal
-  if (process.env.NODE_ENV === 'development') {
+  if (USE_MOCK) {
     console.log(`Mock: Removing role ${roleId} from user ${userId}`)
     return
   }

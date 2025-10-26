@@ -8,6 +8,12 @@ import { apiClient } from '@/lib/api-client'
 import type { Role, Permission } from '@/types'
 
 /**
+ * Check if we should use mock data
+ * Set NEXT_PUBLIC_USE_MOCK_API=false to use real backend API
+ */
+const USE_MOCK = process.env.NEXT_PUBLIC_USE_MOCK_API !== 'false'
+
+/**
  * Role creation request
  */
 export interface CreateRoleRequest {
@@ -34,7 +40,7 @@ export interface UpdateRoleRequest {
  */
 export async function getRoles(): Promise<Role[]> {
   // In development, return mock data
-  if (process.env.NODE_ENV === 'development') {
+  if (USE_MOCK) {
     return getMockRoles()
   }
 
@@ -49,7 +55,7 @@ export async function getRoles(): Promise<Role[]> {
  */
 export async function getRole(id: string): Promise<Role> {
   // In development, return mock data
-  if (process.env.NODE_ENV === 'development') {
+  if (USE_MOCK) {
     return getMockRole(id)
   }
 
@@ -64,7 +70,7 @@ export async function getRole(id: string): Promise<Role> {
  */
 export async function createRole(data: CreateRoleRequest): Promise<Role> {
   // In development, return mock data
-  if (process.env.NODE_ENV === 'development') {
+  if (USE_MOCK) {
     return createMockRole(data)
   }
 
@@ -83,7 +89,7 @@ export async function updateRole(
   data: UpdateRoleRequest
 ): Promise<Role> {
   // In development, return mock data
-  if (process.env.NODE_ENV === 'development') {
+  if (USE_MOCK) {
     return updateMockRole(id, data)
   }
 
@@ -97,7 +103,7 @@ export async function updateRole(
  */
 export async function deleteRole(id: string): Promise<void> {
   // In development, simulate deletion
-  if (process.env.NODE_ENV === 'development') {
+  if (USE_MOCK) {
     console.log(`Mock: Deleting role ${id}`)
     return
   }
@@ -113,7 +119,7 @@ export async function deleteRole(id: string): Promise<void> {
  */
 export async function getUserRoles(userId: string): Promise<Role[]> {
   // In development, return mock data
-  if (process.env.NODE_ENV === 'development') {
+  if (USE_MOCK) {
     return getMockUserRoles(userId)
   }
 
@@ -127,7 +133,7 @@ export async function getUserRoles(userId: string): Promise<Role[]> {
  */
 export async function getPermissions(): Promise<Permission[]> {
   // In development, return mock data
-  if (process.env.NODE_ENV === 'development') {
+  if (USE_MOCK) {
     return getMockPermissions()
   }
 
@@ -145,7 +151,7 @@ export async function assignPermission(
   permissionId: string
 ): Promise<void> {
   // In development, simulate assignment
-  if (process.env.NODE_ENV === 'development') {
+  if (USE_MOCK) {
     console.log(`Mock: Assigning permission ${permissionId} to role ${roleId}`)
     return
   }
@@ -166,7 +172,7 @@ export async function removePermission(
   permissionId: string
 ): Promise<void> {
   // In development, simulate removal
-  if (process.env.NODE_ENV === 'development') {
+  if (USE_MOCK) {
     console.log(
       `Mock: Removing permission ${permissionId} from role ${roleId}`
     )

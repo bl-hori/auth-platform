@@ -9,6 +9,12 @@ import type { Policy, PolicyVersion, PagedResponse } from '@/types'
 import { PolicyStatus } from '@/types'
 
 /**
+ * Check if we should use mock data
+ * Set NEXT_PUBLIC_USE_MOCK_API=false to use real backend API
+ */
+const USE_MOCK = process.env.NEXT_PUBLIC_USE_MOCK_API !== 'false'
+
+/**
  * Policy creation request
  */
 export interface CreatePolicyRequest {
@@ -64,8 +70,7 @@ export interface PolicyTestResponse {
 export async function getPolicies(
   params?: PolicyListParams
 ): Promise<PagedResponse<Policy>> {
-  // In development, return mock data
-  if (process.env.NODE_ENV === 'development') {
+  if (USE_MOCK) {
     return getMockPolicies(params)
   }
 
@@ -82,7 +87,7 @@ export async function getPolicies(
  */
 export async function getPolicy(id: string): Promise<Policy> {
   // In development, return mock data
-  if (process.env.NODE_ENV === 'development') {
+  if (USE_MOCK) {
     return getMockPolicy(id)
   }
 
@@ -97,7 +102,7 @@ export async function getPolicy(id: string): Promise<Policy> {
  */
 export async function createPolicy(data: CreatePolicyRequest): Promise<Policy> {
   // In development, return mock data
-  if (process.env.NODE_ENV === 'development') {
+  if (USE_MOCK) {
     return createMockPolicy(data)
   }
 
@@ -116,7 +121,7 @@ export async function updatePolicy(
   data: UpdatePolicyRequest
 ): Promise<Policy> {
   // In development, return mock data
-  if (process.env.NODE_ENV === 'development') {
+  if (USE_MOCK) {
     return updateMockPolicy(id, data)
   }
 
@@ -130,7 +135,7 @@ export async function updatePolicy(
  */
 export async function deletePolicy(id: string): Promise<void> {
   // In development, simulate deletion
-  if (process.env.NODE_ENV === 'development') {
+  if (USE_MOCK) {
     console.log(`Mock: Deleting policy ${id}`)
     return
   }
@@ -146,7 +151,7 @@ export async function deletePolicy(id: string): Promise<void> {
  */
 export async function publishPolicy(id: string): Promise<Policy> {
   // In development, return mock data
-  if (process.env.NODE_ENV === 'development') {
+  if (USE_MOCK) {
     return publishMockPolicy(id)
   }
 
@@ -165,7 +170,7 @@ export async function testPolicy(
   data: PolicyTestRequest
 ): Promise<PolicyTestResponse> {
   // In development, return mock data
-  if (process.env.NODE_ENV === 'development') {
+  if (USE_MOCK) {
     return testMockPolicy(id, data)
   }
 
@@ -182,7 +187,7 @@ export async function getPolicyVersions(
   policyId: string
 ): Promise<PolicyVersion[]> {
   // In development, return mock data
-  if (process.env.NODE_ENV === 'development') {
+  if (USE_MOCK) {
     return getMockPolicyVersions(policyId)
   }
 
