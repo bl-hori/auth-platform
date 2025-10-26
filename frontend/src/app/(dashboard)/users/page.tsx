@@ -67,10 +67,12 @@ export default function UsersPage() {
         search: search || undefined,
         status: statusFilter || undefined,
       })
-      setUsers(response.content)
-      setTotalPages(response.totalPages)
+      setUsers(response.content || [])
+      setTotalPages(response.totalPages || 0)
     } catch (error) {
       console.error('Failed to load users:', error)
+      setUsers([]) // エラー時も空配列をセット
+      setTotalPages(0)
       toast({
         title: 'エラー',
         description: 'ユーザーの読み込みに失敗しました',
@@ -229,7 +231,7 @@ export default function UsersPage() {
                       読み込み中...
                     </TableCell>
                   </TableRow>
-                ) : users.length === 0 ? (
+                ) : !users || users.length === 0 ? (
                   <TableRow>
                     <TableCell colSpan={6} className="text-center">
                       ユーザーが見つかりません
