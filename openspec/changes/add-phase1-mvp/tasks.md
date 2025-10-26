@@ -66,20 +66,20 @@
 
 ## 5. User & Role Management
 
-- [ ] 5.1 Implement UserService for CRUD operations
-- [ ] 5.2 Implement RoleService with hierarchy support
-- [ ] 5.3 Create REST endpoint POST /v1/users (create user)
-- [ ] 5.4 Create REST endpoint GET /v1/users (list with search)
-- [ ] 5.5 Create REST endpoint GET /v1/users/{id} (get user)
-- [ ] 5.6 Create REST endpoint PUT /v1/users/{id} (update user)
-- [ ] 5.7 Create REST endpoint DELETE /v1/users/{id} (deactivate)
-- [ ] 5.8 Create REST endpoint POST /v1/roles (create role)
-- [ ] 5.9 Create REST endpoint GET /v1/roles (list roles)
+- [x] 5.1 Implement UserService for CRUD operations
+- [x] 5.2 Implement RoleService with hierarchy support
+- [x] 5.3 Create REST endpoint POST /v1/users (create user)
+- [x] 5.4 Create REST endpoint GET /v1/users (list with search)
+- [x] 5.5 Create REST endpoint GET /v1/users/{id} (get user)
+- [x] 5.6 Create REST endpoint PUT /v1/users/{id} (update user)
+- [x] 5.7 Create REST endpoint DELETE /v1/users/{id} (deactivate)
+- [x] 5.8 Create REST endpoint POST /v1/roles (create role)
+- [x] 5.9 Create REST endpoint GET /v1/roles (list roles)
 - [ ] 5.10 Create REST endpoint POST /v1/users/{id}/roles (assign role)
 - [ ] 5.11 Create REST endpoint DELETE /v1/users/{userId}/roles/{roleId}
-- [ ] 5.12 Implement role hierarchy resolution
-- [ ] 5.13 Add JSONB support for user attributes
-- [ ] 5.14 Write tests for user and role management
+- [x] 5.12 Implement role hierarchy resolution
+- [x] 5.13 Add JSONB support for user attributes
+- [x] 5.14 Write tests for user and role management
 
 ## 6. Audit Logging
 
