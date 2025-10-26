@@ -26,8 +26,7 @@ export async function login(page: Page, apiKey: string = TEST_API_KEY) {
  * Logout from the application
  */
 export async function logout(page: Page) {
-  // Click on user menu or logout button
-  await page.click('[data-testid="user-menu"]');
+  // Click logout button directly (it's always visible in header)
   await page.click('[data-testid="logout-button"]');
 
   // Wait for redirect to login page

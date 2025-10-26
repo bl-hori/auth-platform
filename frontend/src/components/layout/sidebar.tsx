@@ -98,6 +98,7 @@ export function Sidebar() {
               <Link
                 key={item.href}
                 href={item.href}
+                data-testid={`${item.href.replace('/', '')}-link`}
                 className={cn(
                   'flex items-center space-x-3 rounded-lg px-3 py-2 text-sm font-medium transition-colors',
                   isActive
