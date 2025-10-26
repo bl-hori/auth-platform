@@ -58,11 +58,11 @@ class SecurityConfigIntegrationTest {
     @Test
     @DisplayName("Should authenticate with valid API key")
     void shouldAuthenticateWithValidApiKey() throws Exception {
-        // Note: This endpoint doesn't exist yet, so it will return 404
-        // But we verify that authentication passes (not 401)
+        // Authentication succeeds, but request fails due to missing Content-Type header
+        // 415 Unsupported Media Type instead of 401 means auth passed
         mockMvc.perform(post("/v1/authorize")
                         .header("X-API-Key", "dev-key-org1-abc123"))
-                .andExpect(status().isNotFound()); // 404 instead of 401 means auth passed
+                .andExpect(status().isUnsupportedMediaType()); // 415 instead of 401 means auth passed
     }
 
     @Test
@@ -85,7 +85,7 @@ class SecurityConfigIntegrationTest {
     void shouldAuthenticateWithSecondApiKey() throws Exception {
         mockMvc.perform(post("/v1/authorize")
                         .header("X-API-Key", "dev-key-org2-def456"))
-                .andExpect(status().isNotFound()); // Auth passes, endpoint doesn't exist yet
+                .andExpect(status().isUnsupportedMediaType()); // Auth passes, but missing Content-Type
     }
 
     @Test
@@ -93,7 +93,7 @@ class SecurityConfigIntegrationTest {
     void shouldAuthenticateWithTestApiKey() throws Exception {
         mockMvc.perform(post("/v1/authorize")
                         .header("X-API-Key", "test-key-xyz789"))
-                .andExpect(status().isNotFound()); // Auth passes, endpoint doesn't exist yet
+                .andExpect(status().isUnsupportedMediaType()); // Auth passes, but missing Content-Type
     }
 
     @Test
