@@ -93,6 +93,20 @@ jacocoTestReport {
         xml.required = true
         html.required = true
     }
+    afterEvaluate {
+        classDirectories.setFrom(files(classDirectories.files.collect {
+            fileTree(dir: it, exclude: [
+                '**/domain/entity/**',           // JPA entities (data classes)
+                '**/api/dto/**',                 // DTOs (data transfer objects)
+                '**/opa/dto/**',                 // OPA DTOs
+                '**/*Config.class',              // Configuration classes
+                '**/*Application.class',         // Spring Boot main class
+                '**/*Properties.class',          // Configuration properties
+                '**/*Converter.class',           // JPA attribute converters
+                '**/domain/repository/**'        // Spring Data JPA repositories (interfaces)
+            ])
+        }))
+    }
 }
 
 jacocoTestCoverageVerification {
@@ -174,10 +188,23 @@ sonar {
         // Quality gates
         property "sonar.qualitygate.wait", "false"
 
-        // Code coverage settings
-        property "sonar.coverage.exclusions", "**/*Config.java,**/*Application.java,**/*Entity.java,**/*DTO.java"
+        // Code coverage exclusions (data classes and infrastructure)
+        property "sonar.coverage.exclusions", [
+            "**/domain/entity/**",           // JPA entities
+            "**/api/dto/**",                 // API DTOs
+            "**/opa/dto/**",                 // OPA DTOs
+            "**/*Config.java",               // Configuration classes
+            "**/*Application.java",          // Spring Boot main class
+            "**/*Properties.java",           // Configuration properties
+            "**/*Converter.java",            // JPA attribute converters
+            "**/domain/repository/**"        // Spring Data repositories (interfaces)
+        ].join(",")
 
-        // Duplicate detection
-        property "sonar.cpd.exclusions", "**/*Entity.java,**/*DTO.java"
+        // Duplicate code detection exclusions
+        property "sonar.cpd.exclusions", [
+            "**/domain/entity/**",
+            "**/api/dto/**",
+            "**/opa/dto/**"
+        ].join(",")
     }
 }
