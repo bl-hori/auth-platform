@@ -42,8 +42,10 @@ test.describe('Basic Authentication', () => {
     // Try to submit without entering API key
     await page.click('button[type="submit"]');
 
-    // Should show error message
-    await expect(page.locator('text=/APIキー/i')).toBeVisible({ timeout: 5000 });
+    // Should show error message in alert
+    const errorAlert = page.getByRole('alert');
+    await expect(errorAlert).toBeVisible({ timeout: 5000 });
+    await expect(errorAlert).toContainText('APIキーを入力してください');
   });
 
   test('should login successfully with any API key', async ({ page }) => {
