@@ -1,7 +1,9 @@
 package io.authplatform.platform.api.controller;
 
 import io.authplatform.platform.api.dto.auditlog.AuditLogQueryParams;
+import io.authplatform.platform.api.security.CurrentOrganizationId;
 import io.authplatform.platform.api.dto.auditlog.AuditLogResponse;
+import io.authplatform.platform.api.security.CurrentOrganizationId;
 import io.authplatform.platform.service.AuditLogService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
@@ -78,8 +80,8 @@ public class AuditLogController {
             @ApiResponse(responseCode = "401", description = "Unauthorized - invalid API key")
     })
     public ResponseEntity<Page<AuditLogResponse>> queryAuditLogs(
-            @Parameter(description = "Organization ID", required = true)
-            @RequestParam UUID organizationId,
+            @Parameter(description = "Organization ID (automatically injected from authentication context)", hidden = true)
+            @CurrentOrganizationId UUID organizationId,
 
             @Parameter(description = "Event type filter")
             @RequestParam(required = false) String eventType,
@@ -190,8 +192,8 @@ public class AuditLogController {
             @ApiResponse(responseCode = "401", description = "Unauthorized - invalid API key")
     })
     public ResponseEntity<String> exportAuditLogsToCsv(
-            @Parameter(description = "Organization ID", required = true)
-            @RequestParam UUID organizationId,
+            @Parameter(description = "Organization ID (automatically injected from authentication context)", hidden = true)
+            @CurrentOrganizationId UUID organizationId,
 
             @Parameter(description = "Event type filter")
             @RequestParam(required = false) String eventType,

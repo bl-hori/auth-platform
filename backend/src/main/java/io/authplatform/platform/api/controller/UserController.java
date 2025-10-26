@@ -1,11 +1,17 @@
 package io.authplatform.platform.api.controller;
 
 import io.authplatform.platform.api.dto.UserCreateRequest;
+import io.authplatform.platform.api.security.CurrentOrganizationId;
 import io.authplatform.platform.api.dto.UserListResponse;
+import io.authplatform.platform.api.security.CurrentOrganizationId;
 import io.authplatform.platform.api.dto.UserResponse;
+import io.authplatform.platform.api.security.CurrentOrganizationId;
 import io.authplatform.platform.api.dto.UserRoleAssignRequest;
+import io.authplatform.platform.api.security.CurrentOrganizationId;
 import io.authplatform.platform.api.dto.UserRoleResponse;
+import io.authplatform.platform.api.security.CurrentOrganizationId;
 import io.authplatform.platform.api.dto.UserUpdateRequest;
+import io.authplatform.platform.api.security.CurrentOrganizationId;
 import io.authplatform.platform.service.UserService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
@@ -144,8 +150,8 @@ public class UserController {
             )
     })
     public UserListResponse listUsers(
-            @Parameter(description = "Organization ID", required = true)
-            @RequestParam UUID organizationId,
+            @Parameter(description = "Organization ID (automatically injected from authentication context)", hidden = true)
+            @CurrentOrganizationId UUID organizationId,
 
             @Parameter(description = "Search query (searches email, username, displayName)")
             @RequestParam(required = false) String search,
