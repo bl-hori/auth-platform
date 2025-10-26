@@ -1,0 +1,732 @@
+{
+  "info": {
+    "name": "Auth Platform API",
+    "description": "Complete API collection for Auth Platform - Authorization as a Service\n\nThis collection includes all API endpoints for:\n- Authorization requests\n- User management\n- Role management\n- Policy management\n- Audit logs\n\n**Authentication**: All requests require an API key in the `X-API-Key` header.\n\n**Environment Variables**:\n- `base_url`: API base URL (default: http://localhost:8080)\n- `api_key`: Your API key (default: dev-api-key-12345)\n- `org_id`: Organization ID (default: org-001)",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
+    "_postman_id": "auth-platform-api-v1",
+    "version": "1.0.0"
+  },
+  "auth": {
+    "type": "apikey",
+    "apikey": [
+      {
+        "key": "key",
+        "value": "X-API-Key",
+        "type": "string"
+      },
+      {
+        "key": "value",
+        "value": "{{api_key}}",
+        "type": "string"
+      },
+      {
+        "key": "in",
+        "value": "header",
+        "type": "string"
+      }
+    ]
+  },
+  "variable": [
+    {
+      "key": "base_url",
+      "value": "http://localhost:8080",
+      "type": "string"
+    },
+    {
+      "key": "api_key",
+      "value": "dev-api-key-12345",
+      "type": "string"
+    },
+    {
+      "key": "org_id",
+      "value": "org-001",
+      "type": "string"
+    }
+  ],
+  "item": [
+    {
+      "name": "Authorization",
+      "description": "Authorization decision endpoints",
+      "item": [
+        {
+          "name": "Single Authorization Request",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"subject\": \"user-001\",\n  \"resource\": \"users\",\n  \"action\": \"read\",\n  \"context\": {\n    \"organizationId\": \"{{org_id}}\",\n    \"ipAddress\": \"192.168.1.100\"\n  }\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/v1/authorize",
+              "host": ["{{base_url}}"],
+              "path": ["v1", "authorize"]
+            },
+            "description": "Check if a subject is authorized to perform an action on a resource"
+          },
+          "response": []
+        },
+        {
+          "name": "Batch Authorization Request",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"requests\": [\n    {\n      \"subject\": \"user-001\",\n      \"resource\": \"users\",\n      \"action\": \"read\",\n      \"context\": {\n        \"organizationId\": \"{{org_id}}\"\n      }\n    },\n    {\n      \"subject\": \"user-001\",\n      \"resource\": \"roles\",\n      \"action\": \"write\",\n      \"context\": {\n        \"organizationId\": \"{{org_id}}\"\n      }\n    }\n  ]\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/v1/authorize/batch",
+              "host": ["{{base_url}}"],
+              "path": ["v1", "authorize", "batch"]
+            },
+            "description": "Check multiple authorization requests in a single call"
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "Users",
+      "description": "User management endpoints",
+      "item": [
+        {
+          "name": "List Users",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/v1/users?page=0&size=20&search=",
+              "host": ["{{base_url}}"],
+              "path": ["v1", "users"],
+              "query": [
+                {
+                  "key": "page",
+                  "value": "0"
+                },
+                {
+                  "key": "size",
+                  "value": "20"
+                },
+                {
+                  "key": "search",
+                  "value": ""
+                }
+              ]
+            },
+            "description": "Get a paginated list of users with optional search"
+          },
+          "response": []
+        },
+        {
+          "name": "Get User by ID",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/v1/users/:userId",
+              "host": ["{{base_url}}"],
+              "path": ["v1", "users", ":userId"],
+              "variable": [
+                {
+                  "key": "userId",
+                  "value": "user-001"
+                }
+              ]
+            },
+            "description": "Get details of a specific user"
+          },
+          "response": []
+        },
+        {
+          "name": "Create User",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"newuser@example.com\",\n  \"username\": \"newuser\",\n  \"displayName\": \"New User\",\n  \"organizationId\": \"{{org_id}}\",\n  \"attributes\": {\n    \"department\": \"Engineering\",\n    \"level\": \"Senior\"\n  }\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/v1/users",
+              "host": ["{{base_url}}"],
+              "path": ["v1", "users"]
+            },
+            "description": "Create a new user"
+          },
+          "response": []
+        },
+        {
+          "name": "Update User",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"updated@example.com\",\n  \"displayName\": \"Updated Name\",\n  \"status\": \"ACTIVE\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/v1/users/:userId",
+              "host": ["{{base_url}}"],
+              "path": ["v1", "users", ":userId"],
+              "variable": [
+                {
+                  "key": "userId",
+                  "value": "user-001"
+                }
+              ]
+            },
+            "description": "Update an existing user"
+          },
+          "response": []
+        },
+        {
+          "name": "Delete User",
+          "request": {
+            "method": "DELETE",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/v1/users/:userId",
+              "host": ["{{base_url}}"],
+              "path": ["v1", "users", ":userId"],
+              "variable": [
+                {
+                  "key": "userId",
+                  "value": "user-001"
+                }
+              ]
+            },
+            "description": "Deactivate a user (soft delete)"
+          },
+          "response": []
+        },
+        {
+          "name": "Assign Role to User",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"roleId\": \"role-admin\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/v1/users/:userId/roles",
+              "host": ["{{base_url}}"],
+              "path": ["v1", "users", ":userId", "roles"],
+              "variable": [
+                {
+                  "key": "userId",
+                  "value": "user-001"
+                }
+              ]
+            },
+            "description": "Assign a role to a user"
+          },
+          "response": []
+        },
+        {
+          "name": "Remove Role from User",
+          "request": {
+            "method": "DELETE",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/v1/users/:userId/roles/:roleId",
+              "host": ["{{base_url}}"],
+              "path": ["v1", "users", ":userId", "roles", ":roleId"],
+              "variable": [
+                {
+                  "key": "userId",
+                  "value": "user-001"
+                },
+                {
+                  "key": "roleId",
+                  "value": "role-admin"
+                }
+              ]
+            },
+            "description": "Remove a role from a user"
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "Roles",
+      "description": "Role management endpoints",
+      "item": [
+        {
+          "name": "List Roles",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/v1/roles",
+              "host": ["{{base_url}}"],
+              "path": ["v1", "roles"]
+            },
+            "description": "Get all roles"
+          },
+          "response": []
+        },
+        {
+          "name": "Get Role by ID",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/v1/roles/:roleId",
+              "host": ["{{base_url}}"],
+              "path": ["v1", "roles", ":roleId"],
+              "variable": [
+                {
+                  "key": "roleId",
+                  "value": "role-admin"
+                }
+              ]
+            },
+            "description": "Get details of a specific role"
+          },
+          "response": []
+        },
+        {
+          "name": "Create Role",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"developer\",\n  \"displayName\": \"Developer\",\n  \"description\": \"Software developer role\",\n  \"parentRoleId\": \"role-viewer\",\n  \"organizationId\": \"{{org_id}}\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/v1/roles",
+              "host": ["{{base_url}}"],
+              "path": ["v1", "roles"]
+            },
+            "description": "Create a new role"
+          },
+          "response": []
+        },
+        {
+          "name": "Update Role",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"displayName\": \"Senior Developer\",\n  \"description\": \"Senior software developer role\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/v1/roles/:roleId",
+              "host": ["{{base_url}}"],
+              "path": ["v1", "roles", ":roleId"],
+              "variable": [
+                {
+                  "key": "roleId",
+                  "value": "role-developer"
+                }
+              ]
+            },
+            "description": "Update an existing role"
+          },
+          "response": []
+        },
+        {
+          "name": "Delete Role",
+          "request": {
+            "method": "DELETE",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/v1/roles/:roleId",
+              "host": ["{{base_url}}"],
+              "path": ["v1", "roles", ":roleId"],
+              "variable": [
+                {
+                  "key": "roleId",
+                  "value": "role-developer"
+                }
+              ]
+            },
+            "description": "Delete a role"
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "Policies",
+      "description": "Policy management endpoints",
+      "item": [
+        {
+          "name": "List Policies",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/v1/policies?page=0&size=20&status=",
+              "host": ["{{base_url}}"],
+              "path": ["v1", "policies"],
+              "query": [
+                {
+                  "key": "page",
+                  "value": "0"
+                },
+                {
+                  "key": "size",
+                  "value": "20"
+                },
+                {
+                  "key": "status",
+                  "value": "",
+                  "description": "DRAFT, PUBLISHED, or ARCHIVED"
+                }
+              ]
+            },
+            "description": "Get a paginated list of policies"
+          },
+          "response": []
+        },
+        {
+          "name": "Get Policy by ID",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/v1/policies/:policyId",
+              "host": ["{{base_url}}"],
+              "path": ["v1", "policies", ":policyId"],
+              "variable": [
+                {
+                  "key": "policyId",
+                  "value": "policy-001"
+                }
+              ]
+            },
+            "description": "Get details of a specific policy"
+          },
+          "response": []
+        },
+        {
+          "name": "Create Policy",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"example_policy\",\n  \"displayName\": \"Example Policy\",\n  \"description\": \"Example authorization policy\",\n  \"regoCode\": \"package authz\\n\\ndefault allow = false\\n\\nallow {\\n  input.method == \\\"GET\\\"\\n  input.user.role == \\\"admin\\\"\\n}\",\n  \"organizationId\": \"{{org_id}}\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/v1/policies",
+              "host": ["{{base_url}}"],
+              "path": ["v1", "policies"]
+            },
+            "description": "Create a new policy"
+          },
+          "response": []
+        },
+        {
+          "name": "Update Policy",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"displayName\": \"Updated Example Policy\",\n  \"description\": \"Updated description\",\n  \"regoCode\": \"package authz\\n\\ndefault allow = false\\n\\nallow {\\n  input.method == \\\"GET\\\"\\n  input.user.role == \\\"admin\\\"\\n}\\n\\nallow {\\n  input.method == \\\"GET\\\"\\n  input.user.role == \\\"editor\\\"\\n}\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/v1/policies/:policyId",
+              "host": ["{{base_url}}"],
+              "path": ["v1", "policies", ":policyId"],
+              "variable": [
+                {
+                  "key": "policyId",
+                  "value": "policy-001"
+                }
+              ]
+            },
+            "description": "Update an existing policy"
+          },
+          "response": []
+        },
+        {
+          "name": "Delete Policy",
+          "request": {
+            "method": "DELETE",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/v1/policies/:policyId",
+              "host": ["{{base_url}}"],
+              "path": ["v1", "policies", ":policyId"],
+              "variable": [
+                {
+                  "key": "policyId",
+                  "value": "policy-001"
+                }
+              ]
+            },
+            "description": "Delete a policy (soft delete)"
+          },
+          "response": []
+        },
+        {
+          "name": "Publish Policy",
+          "request": {
+            "method": "POST",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/v1/policies/:policyId/publish",
+              "host": ["{{base_url}}"],
+              "path": ["v1", "policies", ":policyId", "publish"],
+              "variable": [
+                {
+                  "key": "policyId",
+                  "value": "policy-001"
+                }
+              ]
+            },
+            "description": "Publish a policy (activate it)"
+          },
+          "response": []
+        },
+        {
+          "name": "Test Policy",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"input\": {\n    \"method\": \"GET\",\n    \"user\": {\n      \"id\": \"user-001\",\n      \"role\": \"admin\"\n    },\n    \"resource\": \"users\"\n  }\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/v1/policies/:policyId/test",
+              "host": ["{{base_url}}"],
+              "path": ["v1", "policies", ":policyId", "test"],
+              "variable": [
+                {
+                  "key": "policyId",
+                  "value": "policy-001"
+                }
+              ]
+            },
+            "description": "Test a policy with sample input"
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "Audit Logs",
+      "description": "Audit log endpoints",
+      "item": [
+        {
+          "name": "List Audit Logs",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/v1/audit-logs?page=0&size=20&userId=&resource=&action=&decision=&startDate=&endDate=",
+              "host": ["{{base_url}}"],
+              "path": ["v1", "audit-logs"],
+              "query": [
+                {
+                  "key": "page",
+                  "value": "0"
+                },
+                {
+                  "key": "size",
+                  "value": "20"
+                },
+                {
+                  "key": "userId",
+                  "value": ""
+                },
+                {
+                  "key": "resource",
+                  "value": ""
+                },
+                {
+                  "key": "action",
+                  "value": ""
+                },
+                {
+                  "key": "decision",
+                  "value": "",
+                  "description": "ALLOW or DENY"
+                },
+                {
+                  "key": "startDate",
+                  "value": "",
+                  "description": "ISO 8601 format"
+                },
+                {
+                  "key": "endDate",
+                  "value": "",
+                  "description": "ISO 8601 format"
+                }
+              ]
+            },
+            "description": "Get a paginated list of audit logs with filters"
+          },
+          "response": []
+        },
+        {
+          "name": "Get Audit Log by ID",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/v1/audit-logs/:logId",
+              "host": ["{{base_url}}"],
+              "path": ["v1", "audit-logs", ":logId"],
+              "variable": [
+                {
+                  "key": "logId",
+                  "value": "audit-001"
+                }
+              ]
+            },
+            "description": "Get details of a specific audit log"
+          },
+          "response": []
+        },
+        {
+          "name": "Export Audit Logs (CSV)",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/v1/audit-logs/export?userId=&resource=&action=&decision=&startDate=&endDate=",
+              "host": ["{{base_url}}"],
+              "path": ["v1", "audit-logs", "export"],
+              "query": [
+                {
+                  "key": "userId",
+                  "value": ""
+                },
+                {
+                  "key": "resource",
+                  "value": ""
+                },
+                {
+                  "key": "action",
+                  "value": ""
+                },
+                {
+                  "key": "decision",
+                  "value": ""
+                },
+                {
+                  "key": "startDate",
+                  "value": ""
+                },
+                {
+                  "key": "endDate",
+                  "value": ""
+                }
+              ]
+            },
+            "description": "Export audit logs as CSV"
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "Health & Metrics",
+      "description": "Health check and metrics endpoints",
+      "item": [
+        {
+          "name": "Health Check",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/actuator/health",
+              "host": ["{{base_url}}"],
+              "path": ["actuator", "health"]
+            },
+            "description": "Check API health status"
+          },
+          "response": []
+        },
+        {
+          "name": "Prometheus Metrics",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/actuator/prometheus",
+              "host": ["{{base_url}}"],
+              "path": ["actuator", "prometheus"]
+            },
+            "description": "Get Prometheus metrics"
+          },
+          "response": []
+        },
+        {
+          "name": "API Info",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/actuator/info",
+              "host": ["{{base_url}}"],
+              "path": ["actuator", "info"]
+            },
+            "description": "Get API information"
+          },
+          "response": []
+        }
+      ]
+    }
+  ]
+}

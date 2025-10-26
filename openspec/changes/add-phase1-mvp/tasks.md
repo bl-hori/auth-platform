@@ -146,7 +146,7 @@
 - [x] 11.3 Generate OpenAPI 3.0 specification
 - [x] 11.4 Create Swagger UI endpoint
 - [x] 11.5 Write API integration guide
-- [ ] 11.6 Create Postman collection for testing
+- [x] 11.6 Create Postman collection for testing
 - [x] 11.7 Add code examples for Java, JavaScript, Python
 
 ## 12. Testing & Quality Assurance
