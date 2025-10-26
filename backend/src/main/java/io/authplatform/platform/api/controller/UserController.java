@@ -3,6 +3,8 @@ package io.authplatform.platform.api.controller;
 import io.authplatform.platform.api.dto.UserCreateRequest;
 import io.authplatform.platform.api.dto.UserListResponse;
 import io.authplatform.platform.api.dto.UserResponse;
+import io.authplatform.platform.api.dto.UserRoleAssignRequest;
+import io.authplatform.platform.api.dto.UserRoleResponse;
 import io.authplatform.platform.api.dto.UserUpdateRequest;
 import io.authplatform.platform.service.UserService;
 import io.swagger.v3.oas.annotations.Operation;
@@ -23,6 +25,7 @@ import org.springframework.http.MediaType;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.List;
 import java.util.UUID;
 
 /**
@@ -277,5 +280,160 @@ public class UserController {
         log.info("Activating user: {}", userId);
         userService.activateUser(userId);
         return userService.getUserById(userId);
+    }
+
+    /**
+     * Assign a role to a user.
+     *
+     * <p>This endpoint assigns a role to a user with optional resource scoping
+     * and expiration time.
+     *
+     * @param userId the user ID
+     * @param request the role assignment request
+     * @return the created user-role assignment
+     */
+    @PostMapping(
+            value = "/{userId}/roles",
+            consumes = MediaType.APPLICATION_JSON_VALUE,
+            produces = MediaType.APPLICATION_JSON_VALUE
+    )
+    @ResponseStatus(HttpStatus.CREATED)
+    @Operation(
+            summary = "Assign role to user",
+            description = """
+                    Assigns a role to a user with optional resource scoping and expiration.
+
+                    **Resource Scoping**: When resourceId is provided, the role only applies
+                    to that specific resource. For example, a "Manager" role can be scoped
+                    to a specific project or team.
+
+                    **Expiration**: When expiresAt is provided, the role assignment
+                    automatically becomes inactive after that time.
+
+                    **Validation**:
+                    - User and role must exist in the same organization
+                    - Duplicate assignments (same user, role, resource) are rejected
+                    """
+    )
+    @ApiResponses(value = {
+            @ApiResponse(
+                    responseCode = "201",
+                    description = "Role assigned successfully",
+                    content = @Content(schema = @Schema(implementation = UserRoleResponse.class))
+            ),
+            @ApiResponse(
+                    responseCode = "400",
+                    description = "Invalid request - validation errors"
+            ),
+            @ApiResponse(
+                    responseCode = "404",
+                    description = "User or role not found"
+            ),
+            @ApiResponse(
+                    responseCode = "409",
+                    description = "Role already assigned to user"
+            )
+    })
+    public UserRoleResponse assignRole(
+            @Parameter(description = "User ID", required = true)
+            @PathVariable UUID userId,
+            @Parameter(description = "Role assignment request", required = true)
+            @Valid @RequestBody UserRoleAssignRequest request
+    ) {
+        log.info("Assigning role {} to user {}", request.getRoleId(), userId);
+        return userService.assignRole(userId, request);
+    }
+
+    /**
+     * Remove a role from a user.
+     *
+     * <p>This endpoint removes all assignments of the specified role from the user,
+     * including resource-scoped assignments.
+     *
+     * @param userId the user ID
+     * @param roleId the role ID to remove
+     */
+    @DeleteMapping(value = "/{userId}/roles/{roleId}")
+    @ResponseStatus(HttpStatus.NO_CONTENT)
+    @Operation(
+            summary = "Remove role from user",
+            description = """
+                    Removes a role from a user. This removes all assignments of the
+                    specified role, including any resource-scoped variants.
+
+                    **Example**: If a user has "Manager" role assigned globally and
+                    also scoped to "project:acme", this endpoint will remove both.
+                    """
+    )
+    @ApiResponses(value = {
+            @ApiResponse(
+                    responseCode = "204",
+                    description = "Role removed successfully"
+            ),
+            @ApiResponse(
+                    responseCode = "404",
+                    description = "User or role not found"
+            ),
+            @ApiResponse(
+                    responseCode = "409",
+                    description = "Role is not assigned to user"
+            )
+    })
+    public void removeRole(
+            @Parameter(description = "User ID", required = true)
+            @PathVariable UUID userId,
+            @Parameter(description = "Role ID", required = true)
+            @PathVariable UUID roleId
+    ) {
+        log.info("Removing role {} from user {}", roleId, userId);
+        userService.removeRole(userId, roleId);
+    }
+
+    /**
+     * Get all roles assigned to a user.
+     *
+     * <p>This endpoint returns all active (non-expired) role assignments for a user,
+     * including both global and resource-scoped assignments.
+     *
+     * @param userId the user ID
+     * @return list of user role assignments
+     */
+    @GetMapping(
+            value = "/{userId}/roles",
+            produces = MediaType.APPLICATION_JSON_VALUE
+    )
+    @ResponseStatus(HttpStatus.OK)
+    @Operation(
+            summary = "Get user roles",
+            description = """
+                    Retrieves all active role assignments for a user.
+
+                    **Filtering**: Only non-expired roles are returned. Expired roles
+                    are automatically excluded.
+
+                    **Response**: Each role assignment includes:
+                    - Role details (ID, name, display name)
+                    - Resource scope (if applicable)
+                    - Expiration time (if set)
+                    - Assignment metadata (assigned at, assigned by)
+                    """
+    )
+    @ApiResponses(value = {
+            @ApiResponse(
+                    responseCode = "200",
+                    description = "User roles retrieved successfully",
+                    content = @Content(schema = @Schema(implementation = UserRoleResponse.class))
+            ),
+            @ApiResponse(
+                    responseCode = "404",
+                    description = "User not found"
+            )
+    })
+    public List<UserRoleResponse> getUserRoles(
+            @Parameter(description = "User ID", required = true)
+            @PathVariable UUID userId
+    ) {
+        log.info("Getting roles for user: {}", userId);
+        return userService.getUserRoles(userId);
     }
 }
