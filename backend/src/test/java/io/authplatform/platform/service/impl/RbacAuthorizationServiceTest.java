@@ -51,6 +51,9 @@ class RbacAuthorizationServiceTest {
     @Mock
     private io.authplatform.platform.config.OpaProperties opaProperties;
 
+    @Mock
+    private io.authplatform.platform.service.AuthorizationCacheService cacheService;
+
     @InjectMocks
     private RbacAuthorizationService authorizationService;
 
@@ -63,6 +66,9 @@ class RbacAuthorizationServiceTest {
     void setUp() {
         // Disable OPA for tests (use RBAC only)
         lenient().when(opaProperties.isEnabled()).thenReturn(false);
+
+        // Mock cache service to return empty (cache miss) by default
+        lenient().when(cacheService.get(any())).thenReturn(Optional.empty());
 
         // Create test organization
         testOrg = Organization.builder()
