@@ -132,3 +132,43 @@ export interface AuthorizationResponse {
   evaluatedPolicies: string[]
   metadata?: Record<string, unknown>
 }
+
+/**
+ * Policy entity
+ */
+export interface Policy {
+  id: string
+  organizationId: string
+  name: string
+  displayName: string
+  description?: string
+  regoCode: string
+  version: number
+  status: PolicyStatus
+  createdAt: string
+  updatedAt: string
+  publishedAt?: string
+  publishedBy?: string
+}
+
+/**
+ * Policy status enum
+ */
+export enum PolicyStatus {
+  DRAFT = 'DRAFT',
+  PUBLISHED = 'PUBLISHED',
+  ARCHIVED = 'ARCHIVED',
+}
+
+/**
+ * Policy version entity
+ */
+export interface PolicyVersion {
+  id: string
+  policyId: string
+  version: number
+  regoCode: string
+  publishedAt: string
+  publishedBy: string
+  comment?: string
+}
