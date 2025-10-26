@@ -8,6 +8,17 @@ import io.authplatform.platform.domain.entity.Organization;
 import io.authplatform.platform.domain.entity.User;
 import io.authplatform.platform.domain.repository.OrganizationRepository;
 import io.authplatform.platform.domain.repository.UserRepository;
+import io.authplatform.platform.api.dto.UserRoleAssignRequest;
+import io.authplatform.platform.api.dto.UserRoleResponse;
+import io.authplatform.platform.api.dto.UserUpdateRequest;
+import io.authplatform.platform.domain.entity.Organization;
+import io.authplatform.platform.domain.entity.Role;
+import io.authplatform.platform.domain.entity.User;
+import io.authplatform.platform.domain.entity.UserRole;
+import io.authplatform.platform.domain.repository.OrganizationRepository;
+import io.authplatform.platform.domain.repository.RoleRepository;
+import io.authplatform.platform.domain.repository.UserRepository;
+import io.authplatform.platform.domain.repository.UserRoleRepository;
 import io.authplatform.platform.service.UserService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -21,6 +32,12 @@ import org.springframework.transaction.annotation.Transactional;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.UUID;
+import java.time.OffsetDateTime;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.UUID;
+import java.util.stream.Collectors;
 
 /**
  * Implementation of {@link UserService} for managing users.
@@ -38,6 +55,8 @@ public class UserServiceImpl implements UserService {
 
     private final UserRepository userRepository;
     private final OrganizationRepository organizationRepository;
+    private final RoleRepository roleRepository;
+    private final UserRoleRepository userRoleRepository;
 
     @Override
     public UserResponse createUser(UserCreateRequest request) {
@@ -209,6 +228,109 @@ public class UserServiceImpl implements UserService {
         userRepository.save(user);
 
         log.info("Activated user: {}", userId);
+    }
+
+    @Override
+    public UserRoleResponse assignRole(UUID userId, UserRoleAssignRequest request) {
+        log.info("Assigning role {} to user {} with resource: {}",
+                request.getRoleId(), userId, request.getResourceId());
+
+        // Validate user exists
+        User user = userRepository.findById(userId)
+                .orElseThrow(() -> new IllegalArgumentException("User not found: " + userId));
+
+        // Validate role exists
+        Role role = roleRepository.findById(request.getRoleId())
+                .orElseThrow(() -> new IllegalArgumentException("Role not found: " + request.getRoleId()));
+
+        // Validate user and role are in the same organization
+        if (!user.getOrganization().getId().equals(role.getOrganization().getId())) {
+            throw new IllegalStateException(
+                    "User and role must be in the same organization. "
+                            + "User org: " + user.getOrganization().getId()
+                            + ", Role org: " + role.getOrganization().getId());
+        }
+
+        // Check for duplicate assignment
+        boolean alreadyAssigned = userRoleRepository
+                .findByUserId(userId)
+                .stream()
+                .anyMatch(ur -> ur.getRole().getId().equals(request.getRoleId())
+                        && java.util.Objects.equals(ur.getResourceId(), request.getResourceId()));
+
+        if (alreadyAssigned) {
+            String resourceInfo = request.getResourceId() != null
+                    ? " for resource: " + request.getResourceId()
+                    : " (global)";
+            throw new IllegalStateException(
+                    "Role " + role.getName() + " is already assigned to user" + resourceInfo);
+        }
+
+        // Create user-role assignment
+        UserRole userRole = UserRole.builder()
+                .user(user)
+                .role(role)
+                .resourceId(request.getResourceId())
+                .expiresAt(request.getExpiresAt())
+                .grantedBy(null) // TODO: Get from security context
+                .build();
+
+        UserRole savedUserRole = userRoleRepository.save(userRole);
+
+        log.info("Successfully assigned role {} to user {}", request.getRoleId(), userId);
+
+        return UserRoleResponse.fromEntity(savedUserRole);
+    }
+
+    @Override
+    public void removeRole(UUID userId, UUID roleId) {
+        log.info("Removing role {} from user {}", roleId, userId);
+
+        // Validate user exists
+        User user = userRepository.findById(userId)
+                .orElseThrow(() -> new IllegalArgumentException("User not found: " + userId));
+
+        // Validate role exists
+        Role role = roleRepository.findById(roleId)
+                .orElseThrow(() -> new IllegalArgumentException("Role not found: " + roleId));
+
+        // Find all user-role assignments for this user and role (may be multiple with different resource scopes)
+        List<UserRole> userRoles = userRoleRepository.findByUserId(userId)
+                .stream()
+                .filter(ur -> ur.getRole().getId().equals(roleId))
+                .collect(Collectors.toList());
+
+        if (userRoles.isEmpty()) {
+            throw new IllegalStateException(
+                    "Role " + role.getName() + " is not assigned to user");
+        }
+
+        // Delete all matching user-role assignments (handles multiple resource scopes)
+        userRoleRepository.deleteAll(userRoles);
+
+        log.info("Successfully removed {} role assignment(s) for role {} from user {}",
+                userRoles.size(), roleId, userId);
+    }
+
+    @Override
+    public List<UserRoleResponse> getUserRoles(UUID userId) {
+        log.debug("Getting roles for user: {}", userId);
+
+        // Validate user exists
+        if (!userRepository.existsById(userId)) {
+            throw new IllegalArgumentException("User not found: " + userId);
+        }
+
+        // Get all active user roles (non-expired)
+        OffsetDateTime now = OffsetDateTime.now();
+        List<UserRole> userRoles = userRoleRepository.findByUserId(userId)
+                .stream()
+                .filter(ur -> ur.getExpiresAt() == null || ur.getExpiresAt().isAfter(now))
+                .collect(Collectors.toList());
+
+        return userRoles.stream()
+                .map(UserRoleResponse::fromEntity)
+                .collect(Collectors.toList());
     }
 
     /**

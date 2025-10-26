@@ -6,6 +6,12 @@ import io.authplatform.platform.api.dto.UserResponse;
 import io.authplatform.platform.api.dto.UserUpdateRequest;
 import org.springframework.data.domain.Pageable;
 
+import io.authplatform.platform.api.dto.UserRoleAssignRequest;
+import io.authplatform.platform.api.dto.UserRoleResponse;
+import io.authplatform.platform.api.dto.UserUpdateRequest;
+import org.springframework.data.domain.Pageable;
+
+import java.util.List;
 import java.util.UUID;
 
 /**
@@ -137,4 +143,60 @@ public interface UserService {
      * @throws IllegalStateException if user is not deleted
      */
     void activateUser(UUID userId);
+
+    /**
+     * Assign a role to a user.
+     *
+     * <p>This method:
+     * <ul>
+     *   <li>Validates the user and role exist in the same organization</li>
+     *   <li>Checks for duplicate role assignments (same user, role, resource)</li>
+     *   <li>Supports optional resource scoping</li>
+     *   <li>Supports optional expiration time</li>
+     *   <li>Invalidates authorization cache for the user</li>
+     * </ul>
+     *
+     * @param userId the user ID
+     * @param request the role assignment request
+     * @return the created user-role assignment
+     * @throws IllegalArgumentException if user or role does not exist
+     * @throws IllegalStateException if role is already assigned
+     * @throws IllegalStateException if user and role are in different organizations
+     */
+    UserRoleResponse assignRole(UUID userId, UserRoleAssignRequest request);
+
+    /**
+     * Remove a role from a user.
+     *
+     * <p>This method:
+     * <ul>
+     *   <li>Removes the role assignment</li>
+     *   <li>Handles resource-scoped and global assignments</li>
+     *   <li>Invalidates authorization cache for the user</li>
+     * </ul>
+     *
+     * @param userId the user ID
+     * @param roleId the role ID
+     * @throws IllegalArgumentException if user or role does not exist
+     * @throws IllegalStateException if role is not assigned to user
+     */
+    void removeRole(UUID userId, UUID roleId);
+
+    /**
+     * Get all roles assigned to a user.
+     *
+     * <p>This method returns all active role assignments, including:
+     * <ul>
+     *   <li>Resource-scoped roles</li>
+     *   <li>Global roles</li>
+     *   <li>Non-expired roles</li>
+     * </ul>
+     *
+     * <p>Expired roles are excluded from the results.
+     *
+     * @param userId the user ID
+     * @return list of user role assignments
+     * @throws IllegalArgumentException if user does not exist
+     */
+    List<UserRoleResponse> getUserRoles(UUID userId);
 }

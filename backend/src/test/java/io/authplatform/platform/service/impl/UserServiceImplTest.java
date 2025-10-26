@@ -8,6 +8,9 @@ import io.authplatform.platform.domain.entity.Organization;
 import io.authplatform.platform.domain.entity.User;
 import io.authplatform.platform.domain.repository.OrganizationRepository;
 import io.authplatform.platform.domain.repository.UserRepository;
+import io.authplatform.platform.domain.repository.RoleRepository;
+import io.authplatform.platform.domain.repository.UserRepository;
+import io.authplatform.platform.domain.repository.UserRoleRepository;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -40,6 +43,12 @@ class UserServiceImplTest {
     @Mock
     private OrganizationRepository organizationRepository;
 
+    @Mock
+    private RoleRepository roleRepository;
+
+    @Mock
+    private UserRoleRepository userRoleRepository;
+
     private UserServiceImpl userService;
 
     private Organization testOrg;
@@ -50,6 +59,7 @@ class UserServiceImplTest {
     @BeforeEach
     void setUp() {
         userService = new UserServiceImpl(userRepository, organizationRepository);
+        userService = new UserServiceImpl(userRepository, organizationRepository, roleRepository, userRoleRepository);
 
         orgId = UUID.randomUUID();
         userId = UUID.randomUUID();
