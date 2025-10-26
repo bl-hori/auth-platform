@@ -2,6 +2,7 @@ package io.authplatform.platform.service.impl;
 
 import io.authplatform.platform.api.dto.AuthorizationRequest;
 import io.authplatform.platform.api.dto.AuthorizationResponse;
+import io.authplatform.platform.config.OpaProperties;
 import io.authplatform.platform.domain.entity.Permission;
 import io.authplatform.platform.domain.entity.Role;
 import io.authplatform.platform.domain.entity.RolePermission;
@@ -12,9 +13,13 @@ import io.authplatform.platform.domain.repository.RolePermissionRepository;
 import io.authplatform.platform.domain.repository.RoleRepository;
 import io.authplatform.platform.domain.repository.UserRepository;
 import io.authplatform.platform.domain.repository.UserRoleRepository;
+import io.authplatform.platform.opa.client.OpaClient;
+import io.authplatform.platform.opa.dto.OpaRequest;
+import io.authplatform.platform.opa.dto.OpaResponse;
 import io.authplatform.platform.service.AuthorizationService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -52,7 +57,6 @@ import java.util.stream.Collectors;
  * </ul>
  */
 @Service
-@RequiredArgsConstructor
 @Slf4j
 @Transactional(readOnly = true)
 public class RbacAuthorizationService implements AuthorizationService {
@@ -62,6 +66,25 @@ public class RbacAuthorizationService implements AuthorizationService {
     private final PermissionRepository permissionRepository;
     private final UserRoleRepository userRoleRepository;
     private final RolePermissionRepository rolePermissionRepository;
+    private final OpaProperties opaProperties;
+
+    @Autowired(required = false)
+    private OpaClient opaClient;
+
+    public RbacAuthorizationService(
+            UserRepository userRepository,
+            RoleRepository roleRepository,
+            PermissionRepository permissionRepository,
+            UserRoleRepository userRoleRepository,
+            RolePermissionRepository rolePermissionRepository,
+            OpaProperties opaProperties) {
+        this.userRepository = userRepository;
+        this.roleRepository = roleRepository;
+        this.permissionRepository = permissionRepository;
+        this.userRoleRepository = userRoleRepository;
+        this.rolePermissionRepository = rolePermissionRepository;
+        this.opaProperties = opaProperties;
+    }
 
     // In-memory statistics (will be replaced with Prometheus metrics in Task 3.10)
     private final AtomicLong totalRequests = new AtomicLong(0);
@@ -166,7 +189,7 @@ public class RbacAuthorizationService implements AuthorizationService {
     }
 
     /**
-     * Evaluate authorization based on RBAC rules.
+     * Evaluate authorization based on RBAC rules and optionally OPA policies.
      */
     private AuthorizationResponse evaluateAuthorization(AuthorizationRequest request, long startTime) {
         String principalId = request.getPrincipal().getId();
@@ -197,6 +220,20 @@ public class RbacAuthorizationService implements AuthorizationService {
                     .timestamp(OffsetDateTime.now())
                     .evaluationTimeMs(evaluationTime)
                     .build();
+        }
+
+        // OPA Policy Evaluation (if enabled)
+        if (opaProperties.isEnabled() && opaClient != null) {
+            try {
+                AuthorizationResponse opaResponse = evaluateWithOpa(request, user, startTime);
+                if (opaResponse != null) {
+                    log.debug("OPA policy decision returned: {}", opaResponse.getDecision());
+                    return opaResponse;
+                }
+            } catch (Exception e) {
+                log.warn("OPA evaluation failed, falling back to RBAC: {}", e.getMessage());
+                // Fall through to RBAC evaluation
+            }
         }
 
         // 2. Get user's roles (including inherited roles from hierarchy)
@@ -308,6 +345,93 @@ public class RbacAuthorizationService implements AuthorizationService {
         }
 
         return permissions;
+    }
+
+    /**
+     * Evaluate authorization using OPA (Open Policy Agent).
+     */
+    private AuthorizationResponse evaluateWithOpa(AuthorizationRequest request, User user, long startTime) {
+        try {
+            // Build OPA request
+            Map<String, Object> principal = new HashMap<>();
+            principal.put("id", request.getPrincipal().getId());
+            principal.put("type", request.getPrincipal().getType());
+            if (request.getPrincipal().getAttributes() != null) {
+                principal.putAll(request.getPrincipal().getAttributes());
+            }
+            // Add user details
+            principal.put("email", user.getEmail());
+            principal.put("username", user.getUsername());
+            principal.put("organization_id", user.getOrganization().getId().toString());
+
+            Map<String, Object> resource = new HashMap<>();
+            resource.put("type", request.getResource().getType());
+            resource.put("id", request.getResource().getId());
+            if (request.getResource().getAttributes() != null) {
+                resource.putAll(request.getResource().getAttributes());
+            }
+
+            Map<String, Object> context = request.getContext() != null
+                    ? new HashMap<>(request.getContext())
+                    : new HashMap<>();
+            context.put("timestamp", OffsetDateTime.now().toString());
+            context.put("organization_id", request.getOrganizationId().toString());
+
+            OpaRequest opaRequest = OpaRequest.builder()
+                    .input(OpaRequest.OpaInput.builder()
+                            .principal(principal)
+                            .action(request.getAction())
+                            .resource(resource)
+                            .context(context)
+                            .build())
+                    .build();
+
+            // Call OPA
+            OpaResponse opaResponse = opaClient.evaluatePolicy(opaRequest);
+
+            long evaluationTime = System.currentTimeMillis() - startTime;
+
+            // Build authorization response from OPA result
+            AuthorizationResponse.Decision decision = opaResponse.getResult().isAllow()
+                    ? AuthorizationResponse.Decision.ALLOW
+                    : AuthorizationResponse.Decision.DENY;
+
+            String reason = opaResponse.getResult().getReasons() != null && !opaResponse.getResult().getReasons().isEmpty()
+                    ? String.join("; ", opaResponse.getResult().getReasons())
+                    : (decision == AuthorizationResponse.Decision.ALLOW ? "OPA policy allows access" : "OPA policy denies access");
+
+            // Build applied policies
+            List<AuthorizationResponse.AppliedPolicy> appliedPolicies = new ArrayList<>();
+            if (opaResponse.getResult().getMatchedPolicies() != null) {
+                for (String policyId : opaResponse.getResult().getMatchedPolicies()) {
+                    appliedPolicies.add(AuthorizationResponse.AppliedPolicy.builder()
+                            .policyId(policyId)
+                            .policyName(policyId)
+                            .effect(decision == AuthorizationResponse.Decision.ALLOW ? "allow" : "deny")
+                            .build());
+                }
+            }
+
+            Map<String, Object> responseContext = new HashMap<>();
+            responseContext.put("evaluationMethod", "OPA");
+            responseContext.put("cacheHit", false);
+            if (opaResponse.getResult().getMetadata() != null) {
+                responseContext.putAll(opaResponse.getResult().getMetadata());
+            }
+
+            return AuthorizationResponse.builder()
+                    .decision(decision)
+                    .reason(reason)
+                    .timestamp(OffsetDateTime.now())
+                    .evaluationTimeMs(evaluationTime)
+                    .appliedPolicies(appliedPolicies)
+                    .context(responseContext)
+                    .build();
+
+        } catch (OpaClient.OpaClientException e) {
+            log.error("OPA evaluation failed: {}", e.getMessage());
+            throw e; // Re-throw to trigger fallback to RBAC
+        }
     }
 
     /**

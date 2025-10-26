@@ -106,9 +106,14 @@ auth-platform:
         dev-key-org1-abc123: org-1
         dev-key-org2-def456: org-2
         test-key-xyz789: test-org
-  opa:
-    url: ${OPA_URL:http://localhost:8181}
-    timeout-ms: 100
+# OPA (Open Policy Agent) Configuration
+opa:
+  enabled: ${OPA_ENABLED:false}
+  base-url: ${OPA_BASE_URL:http://localhost:8181}
+  policy-path: ${OPA_POLICY_PATH:/v1/data/authz/allow}
+  timeout-ms: ${OPA_TIMEOUT_MS:5000}
+  connect-timeout-ms: ${OPA_CONNECT_TIMEOUT_MS:2000}
+  retry-attempts: ${OPA_RETRY_ATTEMPTS:3}
   cache:
     l1:
       ttl-seconds: 10
