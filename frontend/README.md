@@ -77,7 +77,97 @@ frontend/
 
 ## 環境変数
 
-`.env.example` を参照してください。
+### バックエンドAPI連携
+
+フロントエンドは **モックデータ** と **実際のバックエンドAPI** の両方をサポートしています。
+
+#### 1. .env.local ファイルの作成
+
+```bash
+# .env.local.example をコピー
+cp .env.local.example .env.local
+```
+
+#### 2. バックエンドAPIを使用する場合
+
+`.env.local` を以下のように設定:
+
+```bash
+# Backend API Configuration
+NEXT_PUBLIC_API_URL=http://localhost:8080
+NEXT_PUBLIC_API_KEY=dev-key-org1-abc123
+
+# Mock API Control
+# Set to 'false' to use real backend API
+NEXT_PUBLIC_USE_MOCK_API=false
+```
+
+**重要**:
+- `NEXT_PUBLIC_USE_MOCK_API=false` を設定すると実際のバックエンドAPIに接続します
+- この設定を省略または `true` にすると、モックデータが使用されます
+- 環境変数を変更した後は、開発サーバーを再起動してください
+
+#### 3. モックデータのみで開発する場合
+
+```bash
+# Mock API Control
+NEXT_PUBLIC_USE_MOCK_API=true  # または省略
+```
+
+### トラブルシューティング
+
+#### 問題: フロントエンドがバックエンドに接続できない
+
+**症状**: フロントエンドを開いてもモックデータのみが表示される
+
+**原因と解決方法**:
+
+1. **環境変数が未設定**
+   ```bash
+   # .env.local の確認
+   cat .env.local
+
+   # NEXT_PUBLIC_USE_MOCK_API=false が設定されているか確認
+   # コメントアウト(#)されている場合は外す
+   ```
+
+2. **開発サーバーの再起動が必要**
+   ```bash
+   # Ctrl+C で停止してから再起動
+   pnpm dev
+   ```
+
+3. **バックエンドが起動していない**
+   ```bash
+   # バックエンドが起動しているか確認
+   curl -H "X-API-Key: dev-key-org1-abc123" http://localhost:8080/v1/policies
+
+   # エラーが返る場合はバックエンドを起動
+   cd ../backend
+   ./gradlew bootRun
+   ```
+
+4. **API Keyが間違っている**
+   ```bash
+   # .env.local の API Key を確認
+   # 正しい値: dev-key-org1-abc123
+   NEXT_PUBLIC_API_KEY=dev-key-org1-abc123
+   ```
+
+#### 問題: CORS エラーが発生する
+
+**症状**: ブラウザコンソールに CORS エラーが表示される
+
+**解決方法**: バックエンドの CORS 設定を確認
+```yaml
+# backend/src/main/resources/application.yml
+auth-platform:
+  security:
+    cors:
+      allowed-origins: "http://localhost:3000"
+```
+
+詳細は [`/docs/FRONTEND_BACKEND_INTEGRATION.md`](../docs/FRONTEND_BACKEND_INTEGRATION.md) を参照してください。
 
 ## ビルド
 
