@@ -136,15 +136,22 @@ export async function getUserRoles(userId: string): Promise<Role[]> {
 /**
  * Get all permissions
  *
- * @returns List of permissions
+ * @returns Paginated list of permissions
  */
-export async function getPermissions(): Promise<Permission[]> {
+export async function getPermissions(): Promise<PagedResponse<Permission>> {
   // In development, return mock data
   if (USE_MOCK) {
-    return getMockPermissions()
+    return {
+      content: getMockPermissions(),
+      page: 0,
+      size: 100,
+      totalElements: getMockPermissions().length,
+      totalPages: 1,
+      last: true,
+    }
   }
 
-  return apiClient.get<Permission[]>('/v1/permissions')
+  return apiClient.get<PagedResponse<Permission>>('/v1/permissions?size=100')
 }
 
 /**

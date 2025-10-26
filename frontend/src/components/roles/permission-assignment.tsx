@@ -60,14 +60,23 @@ export function PermissionAssignment({ roleId }: PermissionAssignmentProps) {
     const loadPermissions = async () => {
       setLoading(true)
       try {
-        const [all, role] = await Promise.all([
+        const [permissionsResponse, role] = await Promise.all([
           getPermissions(),
           getRole(roleId),
         ])
-        setAllPermissions(all)
-        setAssignedPermissions(role.permissions)
+        // Ensure we always have an array from the content field
+        setAllPermissions(
+          Array.isArray(permissionsResponse.content)
+            ? permissionsResponse.content
+            : []
+        )
+        setAssignedPermissions(
+          Array.isArray(role.permissions) ? role.permissions : []
+        )
       } catch (error) {
         console.error('Failed to load permissions:', error)
+        setAllPermissions([])
+        setAssignedPermissions([])
         toast({
           title: 'エラー',
           description: '権限情報の読み込みに失敗しました',
