@@ -1,0 +1,124 @@
+import { test, expect } from '@playwright/test';
+
+/**
+ * Basic Authentication Tests - Step 1
+ *
+ * Tests the most fundamental authentication flow
+ */
+
+test.describe('Basic Authentication', () => {
+  // Clear storage before each test
+  test.beforeEach(async ({ page }) => {
+    await page.goto('/');
+    await page.context().clearCookies();
+    await page.evaluate(() => {
+      localStorage.clear();
+      sessionStorage.clear();
+    });
+  });
+
+  test('should display login page', async ({ page }) => {
+    await page.goto('/login');
+
+    // Wait for page to load
+    await page.waitForLoadState('networkidle');
+
+    // Should have "Auth Platform" text
+    await expect(page.locator('text=Auth Platform')).toBeVisible();
+
+    // Should have API key input
+    const apiKeyInput = page.locator('input[type="password"]');
+    await expect(apiKeyInput).toBeVisible();
+
+    // Should have login button
+    const loginButton = page.locator('button[type="submit"]');
+    await expect(loginButton).toBeVisible();
+  });
+
+  test('should show error with empty API key', async ({ page }) => {
+    await page.goto('/login');
+    await page.waitForLoadState('networkidle');
+
+    // Try to submit without entering API key
+    await page.click('button[type="submit"]');
+
+    // Should show error message - use data-testid to avoid Next.js route announcer
+    const errorAlert = page.getByTestId('error-message');
+    await expect(errorAlert).toBeVisible({ timeout: 5000 });
+    await expect(errorAlert).toContainText('APIキーを入力してください');
+  });
+
+  test('should login successfully with any API key', async ({ page }) => {
+    await page.goto('/login');
+    await page.waitForLoadState('networkidle');
+
+    // Fill in API key (any key works in development)
+    const apiKeyInput = page.getByTestId('api-key-input');
+    await apiKeyInput.fill('test-api-key-12345');
+
+    // Click login button
+    const loginButton = page.getByTestId('login-button');
+    await loginButton.click();
+
+    // Should navigate to dashboard
+    await page.waitForURL('**/dashboard');
+    await page.waitForLoadState('networkidle');
+
+    // Verify we're on dashboard
+    expect(page.url()).toContain('/dashboard');
+  });
+
+  test('should persist authentication on reload', async ({ page }) => {
+    // Login first
+    await page.goto('/login');
+    await page.waitForLoadState('networkidle');
+
+    const apiKeyInput = page.getByTestId('api-key-input');
+    await apiKeyInput.fill('test-api-key-12345');
+
+    const loginButton = page.getByTestId('login-button');
+    await loginButton.click();
+
+    await page.waitForURL('**/dashboard');
+    await page.waitForLoadState('networkidle');
+
+    // Reload the page
+    await page.reload();
+    await page.waitForLoadState('networkidle');
+
+    // Should still be on dashboard (not redirected to login)
+    expect(page.url()).toContain('/dashboard');
+  });
+
+  test('should logout successfully', async ({ page }) => {
+    // Login first
+    await page.goto('/login');
+    await page.waitForLoadState('networkidle');
+
+    const apiKeyInput = page.getByTestId('api-key-input');
+    await apiKeyInput.fill('test-api-key-12345');
+
+    const loginButton = page.getByTestId('login-button');
+    await loginButton.click();
+
+    await page.waitForURL('**/dashboard');
+    await page.waitForLoadState('networkidle');
+
+    // Find and click logout button
+    const logoutButton = page.getByTestId('logout-button');
+    await logoutButton.click();
+
+    // Should navigate back to login
+    await page.waitForURL('**/login');
+    expect(page.url()).toContain('/login');
+  });
+
+  test('should redirect to login when accessing protected route', async ({ page }) => {
+    // Try to access dashboard directly without logging in
+    await page.goto('/dashboard');
+
+    // Should redirect to login
+    await page.waitForURL('**/login');
+    expect(page.url()).toContain('/login');
+  });
+});

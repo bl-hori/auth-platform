@@ -1,0 +1,104 @@
+import { test, expect } from '@playwright/test';
+
+/**
+ * Navigation Tests - Step 2
+ *
+ * Tests navigation between pages after authentication
+ */
+
+test.describe('Navigation', () => {
+  // Login before each test
+  test.beforeEach(async ({ page }) => {
+    await page.goto('/');
+    await page.context().clearCookies();
+    await page.evaluate(() => {
+      localStorage.clear();
+      sessionStorage.clear();
+    });
+
+    // Login
+    await page.goto('/login');
+    await page.waitForLoadState('networkidle');
+
+    // Use data-testid for stable selection
+    const apiKeyInput = page.getByTestId('api-key-input');
+    await apiKeyInput.fill('test-api-key-12345');
+
+    // Click login button
+    const loginButton = page.getByTestId('login-button');
+    await loginButton.click();
+
+    // Wait for navigation to dashboard (uses navigationTimeout from config)
+    await page.waitForURL('**/dashboard');
+    await page.waitForLoadState('networkidle');
+  });
+
+  test('should navigate to users page', async ({ page }) => {
+    // Click on users link in sidebar - use getByRole for proper navigation
+    const usersLink = page.getByRole('link', { name: 'ユーザー管理' });
+    await usersLink.click();
+
+    // Wait for navigation
+    await page.waitForURL('**/users');
+
+    // Verify we're on users page
+    expect(page.url()).toContain('/users');
+
+    // Should have users page content
+    await expect(page.locator('h1, h2').filter({ hasText: /ユーザー|Users/i })).toBeVisible({ timeout: 5000 });
+  });
+
+  test('should navigate to roles page', async ({ page }) => {
+    const rolesLink = page.getByRole('link', { name: 'ロール管理' });
+    await rolesLink.click();
+
+    await page.waitForURL('**/roles');
+    expect(page.url()).toContain('/roles');
+
+    await expect(page.locator('h1, h2').filter({ hasText: /ロール|Role/i })).toBeVisible({ timeout: 5000 });
+  });
+
+  test('should navigate to permissions page', async ({ page }) => {
+    const permissionsLink = page.getByRole('link', { name: '権限管理' });
+    await permissionsLink.click();
+
+    await page.waitForURL('**/permissions');
+    expect(page.url()).toContain('/permissions');
+
+    await expect(page.locator('h1, h2').filter({ hasText: /権限|Permission/i })).toBeVisible({ timeout: 5000 });
+  });
+
+  test('should navigate to policies page', async ({ page }) => {
+    const policiesLink = page.getByRole('link', { name: 'ポリシー管理' });
+    await policiesLink.click();
+
+    await page.waitForURL('**/policies');
+    expect(page.url()).toContain('/policies');
+
+    await expect(page.locator('h1, h2').filter({ hasText: /ポリシー|Polic/i })).toBeVisible({ timeout: 5000 });
+  });
+
+  test('should navigate to audit logs page', async ({ page }) => {
+    const auditLogsLink = page.getByRole('link', { name: '監査ログ' });
+    await auditLogsLink.click();
+
+    await page.waitForURL('**/audit-logs');
+    expect(page.url()).toContain('/audit-logs');
+
+    await expect(page.locator('h1, h2').filter({ hasText: /監査|Audit/i })).toBeVisible({ timeout: 5000 });
+  });
+
+  test('should navigate back to dashboard', async ({ page }) => {
+    // Go to users page first
+    const usersLink = page.getByRole('link', { name: 'ユーザー管理' });
+    await usersLink.click();
+    await page.waitForURL('**/users');
+
+    // Click dashboard link
+    const dashboardLink = page.getByRole('link', { name: 'ダッシュボード' });
+    await dashboardLink.click();
+
+    await page.waitForURL('**/dashboard');
+    expect(page.url()).toContain('/dashboard');
+  });
+});
