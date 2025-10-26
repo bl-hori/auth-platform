@@ -1,9 +1,13 @@
 package io.authplatform.platform.api.controller;
 
 import io.authplatform.platform.api.dto.RoleCreateRequest;
+import io.authplatform.platform.api.security.CurrentOrganizationId;
 import io.authplatform.platform.api.dto.RoleListResponse;
+import io.authplatform.platform.api.security.CurrentOrganizationId;
 import io.authplatform.platform.api.dto.RoleResponse;
+import io.authplatform.platform.api.security.CurrentOrganizationId;
 import io.authplatform.platform.api.dto.RoleUpdateRequest;
+import io.authplatform.platform.api.security.CurrentOrganizationId;
 import io.authplatform.platform.service.RoleService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
@@ -138,8 +142,8 @@ public class RoleController {
             )
     })
     public RoleListResponse listRoles(
-            @Parameter(description = "Organization ID", required = true)
-            @RequestParam UUID organizationId,
+            @Parameter(description = "Organization ID (automatically injected from authentication context)", hidden = true)
+            @CurrentOrganizationId UUID organizationId,
 
             @Parameter(description = "Page number (0-indexed)")
             @RequestParam(defaultValue = "0") int page,
