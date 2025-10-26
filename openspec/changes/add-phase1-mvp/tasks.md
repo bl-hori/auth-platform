@@ -119,16 +119,16 @@
 
 ## 9. Frontend - Role & Policy Management UI
 
-- [ ] 9.1 Create roles list page
-- [ ] 9.2 Create role creation/edit form
-- [ ] 9.3 Implement permission assignment UI
-- [ ] 9.4 Create role hierarchy visualization
-- [ ] 9.5 Create policies list page
-- [ ] 9.6 Create policy editor with Monaco (code editor)
-- [ ] 9.7 Add Rego syntax highlighting
-- [ ] 9.8 Implement policy validation feedback
-- [ ] 9.9 Create policy testing interface
-- [ ] 9.10 Add policy version history viewer
+- [x] 9.1 Create roles list page
+- [x] 9.2 Create role creation/edit form
+- [x] 9.3 Implement permission assignment UI
+- [x] 9.4 Create role hierarchy visualization
+- [x] 9.5 Create policies list page
+- [x] 9.6 Create policy editor with Monaco (code editor)
+- [x] 9.7 Add Rego syntax highlighting
+- [x] 9.8 Implement policy validation feedback
+- [x] 9.9 Create policy testing interface
+- [x] 9.10 Add policy version history viewer
 
 ## 10. Frontend - Audit Log Viewer
 
