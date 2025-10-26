@@ -34,8 +34,9 @@ test.describe('Navigation', () => {
   });
 
   test('should navigate to users page', async ({ page }) => {
-    // Click on users link in sidebar
-    await page.click('text=ユーザー管理');
+    // Click on users link in sidebar - use getByRole for proper navigation
+    const usersLink = page.getByRole('link', { name: 'ユーザー管理' });
+    await usersLink.click();
 
     // Wait for navigation
     await page.waitForURL('**/users', { timeout: 10000 });
@@ -48,7 +49,8 @@ test.describe('Navigation', () => {
   });
 
   test('should navigate to roles page', async ({ page }) => {
-    await page.click('text=ロール管理');
+    const rolesLink = page.getByRole('link', { name: 'ロール管理' });
+    await rolesLink.click();
 
     await page.waitForURL('**/roles', { timeout: 10000 });
     expect(page.url()).toContain('/roles');
@@ -57,7 +59,8 @@ test.describe('Navigation', () => {
   });
 
   test('should navigate to permissions page', async ({ page }) => {
-    await page.click('text=権限管理');
+    const permissionsLink = page.getByRole('link', { name: '権限管理' });
+    await permissionsLink.click();
 
     await page.waitForURL('**/permissions', { timeout: 10000 });
     expect(page.url()).toContain('/permissions');
@@ -66,7 +69,8 @@ test.describe('Navigation', () => {
   });
 
   test('should navigate to policies page', async ({ page }) => {
-    await page.click('text=ポリシー管理');
+    const policiesLink = page.getByRole('link', { name: 'ポリシー管理' });
+    await policiesLink.click();
 
     await page.waitForURL('**/policies', { timeout: 10000 });
     expect(page.url()).toContain('/policies');
@@ -75,7 +79,8 @@ test.describe('Navigation', () => {
   });
 
   test('should navigate to audit logs page', async ({ page }) => {
-    await page.click('text=監査ログ');
+    const auditLogsLink = page.getByRole('link', { name: '監査ログ' });
+    await auditLogsLink.click();
 
     await page.waitForURL('**/audit-logs', { timeout: 10000 });
     expect(page.url()).toContain('/audit-logs');
@@ -85,11 +90,13 @@ test.describe('Navigation', () => {
 
   test('should navigate back to dashboard', async ({ page }) => {
     // Go to users page first
-    await page.click('text=ユーザー管理');
+    const usersLink = page.getByRole('link', { name: 'ユーザー管理' });
+    await usersLink.click();
     await page.waitForURL('**/users', { timeout: 10000 });
 
     // Click dashboard link
-    await page.click('text=ダッシュボード');
+    const dashboardLink = page.getByRole('link', { name: 'ダッシュボード' });
+    await dashboardLink.click();
 
     await page.waitForURL('**/dashboard', { timeout: 10000 });
     expect(page.url()).toContain('/dashboard');

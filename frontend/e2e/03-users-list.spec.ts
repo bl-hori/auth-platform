@@ -33,7 +33,8 @@ test.describe('Users List Page', () => {
     await page.waitForLoadState('networkidle');
 
     // Navigate to users page
-    await page.click('text=ユーザー管理');
+    const usersLink = page.getByRole('link', { name: 'ユーザー管理' });
+    await usersLink.click();
     await page.waitForURL('**/users', { timeout: 10000 });
     await page.waitForLoadState('networkidle');
   });
