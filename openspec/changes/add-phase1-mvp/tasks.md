@@ -41,7 +41,7 @@
 - [x] 3.6 Implement cache invalidation on policy/role changes
 - [x] 3.7 Create REST endpoint POST /v1/authorize
 - [x] 3.8 Create REST endpoint POST /v1/authorize/batch
-- [ ] 3.9 Implement rate limiting using Bucket4j
+- [x] 3.9 Implement rate limiting using Bucket4j
 - [ ] 3.10 Add Prometheus metrics for authorization requests
 - [ ] 3.11 Write unit tests for authorization service
 - [ ] 3.12 Write integration tests for authorization API
