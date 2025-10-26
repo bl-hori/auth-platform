@@ -18,6 +18,9 @@ import io.authplatform.platform.opa.dto.OpaRequest;
 import io.authplatform.platform.opa.dto.OpaResponse;
 import io.authplatform.platform.service.AuthorizationCacheService;
 import io.authplatform.platform.service.AuthorizationService;
+import io.micrometer.core.instrument.Counter;
+import io.micrometer.core.instrument.MeterRegistry;
+import io.micrometer.core.instrument.Timer;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -69,9 +72,19 @@ public class RbacAuthorizationService implements AuthorizationService {
     private final RolePermissionRepository rolePermissionRepository;
     private final OpaProperties opaProperties;
     private final AuthorizationCacheService cacheService;
+    private final MeterRegistry meterRegistry;
 
     @Autowired(required = false)
     private OpaClient opaClient;
+
+    // Prometheus metrics
+    private final Counter totalRequestsCounter;
+    private final Counter allowedRequestsCounter;
+    private final Counter deniedRequestsCounter;
+    private final Counter errorRequestsCounter;
+    private final Timer authorizationTimer;
+    private final Counter cacheHitCounter;
+    private final Counter cacheMissCounter;
 
     public RbacAuthorizationService(
             UserRepository userRepository,
@@ -80,7 +93,8 @@ public class RbacAuthorizationService implements AuthorizationService {
             UserRoleRepository userRoleRepository,
             RolePermissionRepository rolePermissionRepository,
             OpaProperties opaProperties,
-            AuthorizationCacheService cacheService) {
+            AuthorizationCacheService cacheService,
+            MeterRegistry meterRegistry) {
         this.userRepository = userRepository;
         this.roleRepository = roleRepository;
         this.permissionRepository = permissionRepository;
@@ -88,9 +102,39 @@ public class RbacAuthorizationService implements AuthorizationService {
         this.rolePermissionRepository = rolePermissionRepository;
         this.opaProperties = opaProperties;
         this.cacheService = cacheService;
+        this.meterRegistry = meterRegistry;
+
+        // Initialize Prometheus metrics
+        this.totalRequestsCounter = Counter.builder("authz.requests.total")
+                .description("Total number of authorization requests")
+                .register(meterRegistry);
+
+        this.allowedRequestsCounter = Counter.builder("authz.requests.allowed")
+                .description("Number of allowed authorization requests")
+                .register(meterRegistry);
+
+        this.deniedRequestsCounter = Counter.builder("authz.requests.denied")
+                .description("Number of denied authorization requests")
+                .register(meterRegistry);
+
+        this.errorRequestsCounter = Counter.builder("authz.requests.error")
+                .description("Number of authorization requests that resulted in errors")
+                .register(meterRegistry);
+
+        this.authorizationTimer = Timer.builder("authz.evaluation.duration")
+                .description("Authorization evaluation duration")
+                .register(meterRegistry);
+
+        this.cacheHitCounter = Counter.builder("authz.cache.hits")
+                .description("Number of authorization cache hits")
+                .register(meterRegistry);
+
+        this.cacheMissCounter = Counter.builder("authz.cache.misses")
+                .description("Number of authorization cache misses")
+                .register(meterRegistry);
     }
 
-    // In-memory statistics (will be replaced with Prometheus metrics in Task 3.10)
+    // In-memory statistics for getStatistics() method (kept for backward compatibility)
     private final AtomicLong totalRequests = new AtomicLong(0);
     private final AtomicLong allowedRequests = new AtomicLong(0);
     private final AtomicLong deniedRequests = new AtomicLong(0);
@@ -105,6 +149,7 @@ public class RbacAuthorizationService implements AuthorizationService {
         // Check cache first
         Optional<AuthorizationResponse> cachedResponse = cacheService.get(request);
         if (cachedResponse.isPresent()) {
+            cacheHitCounter.increment();
             log.debug("Cache hit for request: org={}, principal={}, action={}, resource={}",
                     request.getOrganizationId(),
                     request.getPrincipal().getId(),
@@ -113,8 +158,10 @@ public class RbacAuthorizationService implements AuthorizationService {
             return cachedResponse.get();
         }
 
+        cacheMissCounter.increment();
         long startTime = System.currentTimeMillis();
         totalRequests.incrementAndGet();
+        totalRequestsCounter.increment();
 
         try {
             log.debug("Evaluating authorization request: org={}, principal={}, action={}, resource={}",
@@ -123,8 +170,9 @@ public class RbacAuthorizationService implements AuthorizationService {
                     request.getAction(),
                     request.getResource().getType() + ":" + request.getResource().getId());
 
-            // Evaluate authorization
-            AuthorizationResponse response = evaluateAuthorization(request, startTime);
+            // Evaluate authorization with timer
+            AuthorizationResponse response = authorizationTimer.recordCallable(() ->
+                evaluateAuthorization(request, startTime));
 
             // Cache the result
             cacheService.put(request, response);
@@ -474,19 +522,32 @@ public class RbacAuthorizationService implements AuthorizationService {
 
     /**
      * Update statistics based on response.
+     * Updates both in-memory counters (for getStatistics()) and Prometheus metrics.
      */
     private void updateStatistics(AuthorizationResponse response) {
+        String decision = response.getDecision().name().toLowerCase();
+
         switch (response.getDecision()) {
             case ALLOW:
                 allowedRequests.incrementAndGet();
+                allowedRequestsCounter.increment();
                 break;
             case DENY:
                 deniedRequests.incrementAndGet();
+                deniedRequestsCounter.increment();
                 break;
             case ERROR:
                 errorRequests.incrementAndGet();
+                errorRequestsCounter.increment();
                 break;
         }
+
+        // Record decision with tag for detailed metrics
+        Counter.builder("authz.decisions")
+                .description("Authorization decisions by type")
+                .tag("decision", decision)
+                .register(meterRegistry)
+                .increment();
     }
 
     /**

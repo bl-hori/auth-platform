@@ -8,11 +8,12 @@ import io.authplatform.platform.domain.repository.RolePermissionRepository;
 import io.authplatform.platform.domain.repository.RoleRepository;
 import io.authplatform.platform.domain.repository.UserRepository;
 import io.authplatform.platform.domain.repository.UserRoleRepository;
+import io.micrometer.core.instrument.MeterRegistry;
+import io.micrometer.core.instrument.simple.SimpleMeterRegistry;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
-import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
@@ -54,7 +55,7 @@ class RbacAuthorizationServiceTest {
     @Mock
     private io.authplatform.platform.service.AuthorizationCacheService cacheService;
 
-    @InjectMocks
+    private MeterRegistry meterRegistry;
     private RbacAuthorizationService authorizationService;
 
     private Organization testOrg;
@@ -64,6 +65,21 @@ class RbacAuthorizationServiceTest {
 
     @BeforeEach
     void setUp() {
+        // Create a real SimpleMeterRegistry for testing
+        meterRegistry = new SimpleMeterRegistry();
+
+        // Initialize service with real MeterRegistry
+        authorizationService = new RbacAuthorizationService(
+                userRepository,
+                roleRepository,
+                permissionRepository,
+                userRoleRepository,
+                rolePermissionRepository,
+                opaProperties,
+                cacheService,
+                meterRegistry
+        );
+
         // Disable OPA for tests (use RBAC only)
         lenient().when(opaProperties.isEnabled()).thenReturn(false);
 
@@ -661,5 +677,121 @@ class RbacAuthorizationServiceTest {
         assertThat(stats.getAllowedRequests()).isEqualTo(3); // read requests
         assertThat(stats.getDeniedRequests()).isEqualTo(2); // write requests
         assertThat(stats.getAverageEvaluationTimeMs()).isGreaterThanOrEqualTo(0);
+    }
+
+    @Test
+    @DisplayName("Should record Prometheus metrics for authorization requests")
+    void shouldRecordPrometheusMetrics() {
+        // Given: User with permission
+        RolePermission rolePermission = RolePermission.builder()
+                .id(UUID.randomUUID())
+                .role(viewerRole)
+                .permission(readPermission)
+                .build();
+
+        UserRole userRole = UserRole.builder()
+                .id(UUID.randomUUID())
+                .user(testUser)
+                .role(viewerRole)
+                .build();
+
+        when(userRepository.findByExternalIdAndDeletedAtIsNull("user-123"))
+                .thenReturn(Optional.of(testUser));
+        when(userRoleRepository.findNonExpiredByUserId(eq(testUser.getId()), any()))
+                .thenReturn(List.of(userRole));
+        when(rolePermissionRepository.findByRoleId(viewerRole.getId()))
+                .thenReturn(List.of(rolePermission));
+
+        AuthorizationRequest request = AuthorizationRequest.builder()
+                .organizationId(testOrg.getId())
+                .principal(AuthorizationRequest.Principal.builder()
+                        .id("user-123")
+                        .type("user")
+                        .build())
+                .action("read")
+                .resource(AuthorizationRequest.Resource.builder()
+                        .type("document")
+                        .id("doc-1")
+                        .build())
+                .build();
+
+        // When: Make authorization request
+        AuthorizationResponse response = authorizationService.authorize(request);
+
+        // Then: Should record metrics
+        assertThat(response.getDecision()).isEqualTo(AuthorizationResponse.Decision.ALLOW);
+
+        // Verify Prometheus metrics were recorded
+        assertThat(meterRegistry.counter("authz.requests.total").count()).isEqualTo(1.0);
+        assertThat(meterRegistry.counter("authz.requests.allowed").count()).isEqualTo(1.0);
+        assertThat(meterRegistry.counter("authz.cache.misses").count()).isEqualTo(1.0);
+        assertThat(meterRegistry.counter("authz.decisions", "decision", "allow").count()).isEqualTo(1.0);
+        assertThat(meterRegistry.timer("authz.evaluation.duration").count()).isEqualTo(1L);
+    }
+
+    @Test
+    @DisplayName("Should record cache hit metrics")
+    void shouldRecordCacheHitMetrics() {
+        // Given: Cached response
+        AuthorizationResponse cachedResponse = AuthorizationResponse.builder()
+                .decision(AuthorizationResponse.Decision.ALLOW)
+                .reason("Cached decision")
+                .evaluationTimeMs(0L)
+                .build();
+
+        when(cacheService.get(any())).thenReturn(Optional.of(cachedResponse));
+
+        AuthorizationRequest request = AuthorizationRequest.builder()
+                .organizationId(testOrg.getId())
+                .principal(AuthorizationRequest.Principal.builder()
+                        .id("user-123")
+                        .type("user")
+                        .build())
+                .action("read")
+                .resource(AuthorizationRequest.Resource.builder()
+                        .type("document")
+                        .id("doc-1")
+                        .build())
+                .build();
+
+        // When: Make authorization request (cache hit)
+        authorizationService.authorize(request);
+
+        // Then: Should record cache hit metric
+        assertThat(meterRegistry.counter("authz.cache.hits").count()).isEqualTo(1.0);
+        // Total requests counter should NOT be incremented for cache hits
+        assertThat(meterRegistry.counter("authz.requests.total").count()).isEqualTo(0.0);
+    }
+
+    @Test
+    @DisplayName("Should record metrics for denied requests")
+    void shouldRecordMetricsForDeniedRequests() {
+        // Given: User without permission
+        when(userRepository.findByExternalIdAndDeletedAtIsNull("user-456"))
+                .thenReturn(Optional.of(testUser));
+        when(userRoleRepository.findNonExpiredByUserId(eq(testUser.getId()), any()))
+                .thenReturn(List.of());
+
+        AuthorizationRequest request = AuthorizationRequest.builder()
+                .organizationId(testOrg.getId())
+                .principal(AuthorizationRequest.Principal.builder()
+                        .id("user-456")
+                        .type("user")
+                        .build())
+                .action("delete")
+                .resource(AuthorizationRequest.Resource.builder()
+                        .type("document")
+                        .id("doc-2")
+                        .build())
+                .build();
+
+        // When: Make authorization request
+        AuthorizationResponse response = authorizationService.authorize(request);
+
+        // Then: Should record denied metrics
+        assertThat(response.getDecision()).isEqualTo(AuthorizationResponse.Decision.DENY);
+        assertThat(meterRegistry.counter("authz.requests.total").count()).isEqualTo(1.0);
+        assertThat(meterRegistry.counter("authz.requests.denied").count()).isEqualTo(1.0);
+        assertThat(meterRegistry.counter("authz.decisions", "decision", "deny").count()).isEqualTo(1.0);
     }
 }
