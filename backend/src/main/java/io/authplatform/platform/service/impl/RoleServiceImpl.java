@@ -125,7 +125,7 @@ public class RoleServiceImpl implements RoleService {
         long totalElements = roleRepository.countNotDeletedByOrganizationId(organizationId);
 
         return RoleListResponse.builder()
-                .roles(roles)
+                .content(roles)
                 .page(pageable.getPageNumber())
                 .size(pageable.getPageSize())
                 .totalElements(totalElements)

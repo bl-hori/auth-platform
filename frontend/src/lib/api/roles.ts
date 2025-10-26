@@ -5,7 +5,7 @@
  */
 
 import { apiClient } from '@/lib/api-client'
-import type { Role, Permission } from '@/types'
+import type { Role, Permission, PagedResponse } from '@/types'
 
 /**
  * Check if we should use mock data
@@ -36,15 +36,22 @@ export interface UpdateRoleRequest {
 /**
  * Get all roles
  *
- * @returns List of roles
+ * @returns Paginated list of roles
  */
-export async function getRoles(): Promise<Role[]> {
+export async function getRoles(): Promise<PagedResponse<Role>> {
   // In development, return mock data
   if (USE_MOCK) {
-    return getMockRoles()
+    return {
+      content: getMockRoles(),
+      page: 0,
+      size: 20,
+      totalElements: getMockRoles().length,
+      totalPages: 1,
+      last: true,
+    }
   }
 
-  return apiClient.get<Role[]>('/v1/roles')
+  return apiClient.get<PagedResponse<Role>>('/v1/roles')
 }
 
 /**

@@ -57,13 +57,14 @@ export default function RoleEditPage({
       setLoading(true)
       try {
         const { id } = await params
-        const [roleData, rolesData] = await Promise.all([
+        const [roleData, rolesResponse] = await Promise.all([
           getRole(id),
           getRoles(),
         ])
 
         setRole(roleData)
-        setRoles(rolesData)
+        // Ensure we always have an array from the content field
+        setRoles(Array.isArray(rolesResponse.content) ? rolesResponse.content : [])
         setFormData({
           displayName: roleData.displayName,
           description: roleData.description || '',
@@ -71,6 +72,8 @@ export default function RoleEditPage({
         })
       } catch (error) {
         console.error('Failed to load role:', error)
+        // Set empty array on error
+        setRoles([])
         toast({
           title: 'エラー',
           description: 'ロール情報の読み込みに失敗しました',
@@ -230,13 +233,14 @@ export default function RoleEditPage({
                 className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
               >
                 <option value="">親ロールを選択...</option>
-                {roles
-                  .filter(r => r.id !== role.id)
-                  .map(r => (
-                    <option key={r.id} value={r.id}>
-                      {r.displayName}
-                    </option>
-                  ))}
+                {Array.isArray(roles) &&
+                  roles
+                    .filter(r => r.id !== role?.id)
+                    .map(r => (
+                      <option key={r.id} value={r.id}>
+                        {r.displayName}
+                      </option>
+                    ))}
               </select>
               <p className="text-sm text-muted-foreground">
                 親ロールの権限を継承します

@@ -4,6 +4,7 @@ import io.swagger.v3.oas.annotations.media.Schema;
 import jakarta.validation.constraints.Max;
 import jakarta.validation.constraints.Min;
 import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Size;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -26,7 +27,7 @@ import java.util.UUID;
 public class RoleCreateRequest {
 
     @Schema(description = "Organization ID", requiredMode = Schema.RequiredMode.REQUIRED)
-    @NotBlank(message = "Organization ID is required")
+    @NotNull(message = "Organization ID is required")
     private UUID organizationId;
 
     @Schema(description = "Role name", requiredMode = Schema.RequiredMode.REQUIRED)
