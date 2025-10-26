@@ -67,12 +67,12 @@ export default function AuditLogsPage() {
       const params: AuditLogParams = {
         page,
         size: 20,
-        userId: filters.userId || undefined,
-        resource: filters.resource || undefined,
-        action: filters.action || undefined,
-        decision: filters.decision || undefined,
-        startDate: filters.startDate || undefined,
-        endDate: filters.endDate || undefined,
+        userId: filters.userId ? filters.userId : undefined,
+        resource: filters.resource ? filters.resource : undefined,
+        action: filters.action ? filters.action : undefined,
+        decision: filters.decision ? filters.decision : undefined,
+        startDate: filters.startDate ? filters.startDate : undefined,
+        endDate: filters.endDate ? filters.endDate : undefined,
       }
 
       const response = await getAuditLogs(params)
@@ -128,12 +128,12 @@ export default function AuditLogsPage() {
     setExporting(true)
     try {
       const params: AuditLogParams = {
-        userId: filters.userId || undefined,
-        resource: filters.resource || undefined,
-        action: filters.action || undefined,
-        decision: filters.decision || undefined,
-        startDate: filters.startDate || undefined,
-        endDate: filters.endDate || undefined,
+        userId: filters.userId ? filters.userId : undefined,
+        resource: filters.resource ? filters.resource : undefined,
+        action: filters.action ? filters.action : undefined,
+        decision: filters.decision ? filters.decision : undefined,
+        startDate: filters.startDate ? filters.startDate : undefined,
+        endDate: filters.endDate ? filters.endDate : undefined,
       }
 
       const csv = await exportAuditLogsCsv(params)

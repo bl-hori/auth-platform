@@ -41,8 +41,15 @@ export async function getAuditLogs(
     return getMockAuditLogs(params)
   }
 
+  // Remove undefined values from params
+  const cleanParams = params
+    ? Object.fromEntries(
+        Object.entries(params).filter(([_, value]) => value !== undefined)
+      )
+    : {}
+
   return apiClient.get<PagedResponse<AuditLog>>('/v1/audit-logs', {
-    params: params as unknown as Record<string, string | number | boolean>,
+    params: cleanParams as unknown as Record<string, string | number | boolean>,
   })
 }
 
@@ -75,8 +82,15 @@ export async function exportAuditLogsCsv(
     return getMockCsv(params)
   }
 
+  // Remove undefined values from params
+  const cleanParams = params
+    ? Object.fromEntries(
+        Object.entries(params).filter(([_, value]) => value !== undefined)
+      )
+    : {}
+
   return apiClient.get<string>('/v1/audit-logs/export', {
-    params: params as unknown as Record<string, string | number | boolean>,
+    params: cleanParams as unknown as Record<string, string | number | boolean>,
   })
 }
 
