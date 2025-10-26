@@ -58,8 +58,15 @@ export async function getUsers(
     return getMockUsers(params)
   }
 
+  // Filter out undefined values from params
+  const cleanParams = params
+    ? Object.fromEntries(
+        Object.entries(params).filter(([_, value]) => value !== undefined)
+      )
+    : {}
+
   return apiClient.get<PagedResponse<User>>('/v1/users', {
-    params: params as unknown as Record<string, string | number | boolean>,
+    params: cleanParams as Record<string, string | number | boolean>,
   })
 }
 
