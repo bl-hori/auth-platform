@@ -45,7 +45,7 @@ export function Header() {
         <div className="flex items-center space-x-4">
           {/* User Info */}
           {user && (
-            <div className="flex items-center space-x-3">
+            <div className="flex items-center space-x-3" data-testid="user-menu">
               <div className="text-right">
                 <p className="text-sm font-medium">{user.displayName}</p>
                 <p className="text-xs text-muted-foreground">{user.email}</p>
@@ -57,7 +57,12 @@ export function Header() {
           )}
 
           {/* Logout Button */}
-          <Button variant="ghost" size="sm" onClick={handleLogout}>
+          <Button
+            variant="ghost"
+            size="sm"
+            onClick={handleLogout}
+            data-testid="logout-button"
+          >
             <LogOut className="mr-2 h-4 w-4" />
             ログアウト
           </Button>

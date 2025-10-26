@@ -92,6 +92,7 @@ export default function LoginPage() {
               <Label htmlFor="apiKey">API Key</Label>
               <Input
                 id="apiKey"
+                name="apiKey"
                 type="password"
                 placeholder="dev-api-key-12345"
                 value={apiKey}
@@ -99,6 +100,7 @@ export default function LoginPage() {
                 disabled={isLoading}
                 autoComplete="off"
                 autoFocus
+                data-testid="api-key-input"
               />
               <p className="text-xs text-muted-foreground">
                 開発環境では .env.local に設定されたAPIキーを使用してください
@@ -106,14 +108,19 @@ export default function LoginPage() {
             </div>
 
             {error && (
-              <Alert variant="destructive">
+              <Alert variant="destructive" data-testid="error-message">
                 <AlertCircle className="h-4 w-4" />
                 <AlertDescription>{error}</AlertDescription>
               </Alert>
             )}
 
             <div className="space-y-2">
-              <Button type="submit" className="w-full" disabled={isLoading}>
+              <Button
+                type="submit"
+                className="w-full"
+                disabled={isLoading}
+                data-testid="login-button"
+              >
                 {isLoading ? 'ログイン中...' : 'ログイン'}
               </Button>
 
