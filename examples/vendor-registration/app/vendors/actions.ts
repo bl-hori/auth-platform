@@ -16,6 +16,85 @@ export interface ActionResult<T = void> {
 }
 
 /**
+ * 取引先を更新するServer Action
+ *
+ * @param id - 取引先ID
+ * @param request - 取引先更新リクエスト
+ * @returns 更新された取引先
+ */
+export async function updateVendorAction(
+  id: string,
+  request: CreateVendorRequest
+): Promise<ActionResult<VendorApplication>> {
+  try {
+    // ユーザーセッションを取得
+    const user = getCurrentUser();
+    if (!user) {
+      return {
+        success: false,
+        error: 'ログインが必要です',
+      };
+    }
+
+    // 既存の取引先を取得
+    const existingVendor = mockDataStore.getById(id);
+    if (!existingVendor) {
+      return {
+        success: false,
+        error: '取引先が見つかりません',
+      };
+    }
+
+    // 認可チェック
+    const authResponse = await authClient.authorize({
+      userId: user.id,
+      action: 'update',
+      resourceType: 'vendor',
+      resourceId: id,
+      context: {
+        status: existingVendor.status,
+        ownerId: existingVendor.submittedBy,
+      },
+    });
+
+    if (authResponse.decision !== 'ALLOW') {
+      return {
+        success: false,
+        error: '取引先を更新する権限がありません',
+      };
+    }
+
+    // 取引先を更新
+    const updatedVendor = mockDataStore.update(id, {
+      ...request,
+      updatedAt: new Date(),
+    });
+
+    if (!updatedVendor) {
+      return {
+        success: false,
+        error: '取引先の更新に失敗しました',
+      };
+    }
+
+    // キャッシュを無効化
+    revalidatePath('/vendors');
+    revalidatePath(`/vendors/${id}`);
+
+    return {
+      success: true,
+      data: updatedVendor,
+    };
+  } catch (error) {
+    console.error('Failed to update vendor:', error);
+    return {
+      success: false,
+      error: '取引先の更新に失敗しました',
+    };
+  }
+}
+
+/**
  * 取引先を作成するServer Action
  *
  * @param request - 取引先作成リクエスト
