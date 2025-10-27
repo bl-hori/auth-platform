@@ -49,9 +49,16 @@ export default function HomePage() {
           </Card>
         </div>
 
-        <Link href="/login">
-          <Button size="lg">ログイン</Button>
-        </Link>
+        <div className="flex justify-center gap-4">
+          <Link href="/login">
+            <Button size="lg">ログイン</Button>
+          </Link>
+          <Link href="/dashboard">
+            <Button size="lg" variant="outline">
+              ダッシュボード
+            </Button>
+          </Link>
+        </div>
 
         <div className="mt-8 text-sm text-muted-foreground">
           <p>このアプリケーションは Auth Platform の認可機構を使用した実装例です</p>

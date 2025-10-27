@@ -23,6 +23,16 @@ export function Header() {
           <Link className="mr-6 flex items-center space-x-2" href="/">
             <span className="font-bold">取引先登録システム</span>
           </Link>
+          {user && (
+            <nav className="flex items-center space-x-6 text-sm font-medium">
+              <Link href="/dashboard" className="transition-colors hover:text-foreground/80">
+                ダッシュボード
+              </Link>
+              <Link href="/vendors" className="transition-colors hover:text-foreground/80">
+                取引先一覧
+              </Link>
+            </nav>
+          )}
         </div>
         <div className="flex flex-1 items-center justify-end space-x-4">
           {loading ? (
