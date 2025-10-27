@@ -64,14 +64,16 @@
 - **Actual Time**: 1 hour
 
 ### Task 2.3: Create Authorization Guard Components
-- [ ] Implement `AuthGuard` component for declarative authorization
-- [ ] Create `ProtectedButton` component with authorization check
-- [ ] Create `ProtectedLink` component with authorization check
-- [ ] Add loading and error states for authorization checks
-- [ ] Implement fallback UI for unauthorized access
-- **Validation**: Components correctly show/hide based on authorization
+- [x] Implement `AuthGuard` component for declarative authorization
+- [x] Create `ProtectedButton` component with authorization check
+- [x] Create `ProtectedLink` component with authorization check
+- [x] Add loading and error states for authorization checks
+- [x] Implement fallback UI for unauthorized access
+- [x] hideWhenUnauthorized option for hiding unauthorized elements
+- **Validation**: `pnpm build` completes successfully ✅
 - **Dependencies**: Task 2.2
 - **Estimated Time**: 1 hour
+- **Actual Time**: 30 minutes
 
 ## Phase 3: Authentication & Session Management
 
