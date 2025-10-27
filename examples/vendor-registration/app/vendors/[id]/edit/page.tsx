@@ -8,7 +8,7 @@ import { VendorApplication } from '@/types/vendor';
 import { getVendorById } from '@/lib/mock-data';
 import { VendorForm } from '@/components/vendor-form';
 import { Button } from '@/components/ui/button';
-import { updateVendorAction } from '../../actions';
+import { updateVendorAction, submitVendorAction } from '../../actions';
 import { CreateVendorRequest } from '@/types/vendor';
 import { checkAuthorization } from '@/lib/authorization';
 
@@ -29,6 +29,7 @@ export default function EditVendorPage({ params }: { params: Promise<{ id: strin
   const [authorized, setAuthorized] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState<string | null>(null);
+  const [submitting, setSubmitting] = useState(false);
 
   useEffect(() => {
     params.then((p) => setVendorId(p.id));
@@ -105,6 +106,39 @@ export default function EditVendorPage({ params }: { params: Promise<{ id: strin
     } catch (err) {
       console.error('Submit error:', err);
       setError('予期しないエラーが発生しました');
+    }
+  };
+
+  /**
+   * 申請処理
+   */
+  const handleSubmitForApproval = async () => {
+    if (!vendorId || !vendor) return;
+
+    if (!confirm(`「${vendor.companyName}」を承認申請しますか？`)) {
+      return;
+    }
+
+    setSubmitting(true);
+    setError(null);
+    setSuccess(null);
+
+    try {
+      const result = await submitVendorAction(vendorId);
+
+      if (result.success) {
+        setSuccess('承認申請を提出しました');
+        setTimeout(() => {
+          router.push(`/vendors/${vendorId}`);
+        }, 1000);
+      } else {
+        setError(result.error || '申請に失敗しました');
+      }
+    } catch (err) {
+      console.error('Submit error:', err);
+      setError('予期しないエラーが発生しました');
+    } finally {
+      setSubmitting(false);
     }
   };
 
@@ -244,6 +278,26 @@ export default function EditVendorPage({ params }: { params: Promise<{ id: strin
           submitLabel="更新"
           onCancel={handleCancel}
         />
+
+        {/* 承認申請ボタン（下書きの場合のみ） */}
+        {vendor.status === 'draft' && (
+          <div className="mt-6">
+            <div className="rounded-md border border-blue-300 bg-blue-50 p-4">
+              <p className="text-sm font-medium text-blue-900">承認申請</p>
+              <p className="mt-1 text-sm text-blue-800">
+                全ての情報を入力したら、承認申請を提出できます。
+                申請後は限定的な編集のみ可能になります。
+              </p>
+              <Button
+                onClick={handleSubmitForApproval}
+                disabled={submitting}
+                className="mt-3"
+              >
+                {submitting ? '申請中...' : '承認申請を提出'}
+              </Button>
+            </div>
+          </div>
+        )}
 
         {/* ヘルプテキスト */}
         <div className="mt-6 rounded-md border p-4 text-sm text-muted-foreground">

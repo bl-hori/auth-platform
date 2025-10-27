@@ -163,14 +163,15 @@
 ## Phase 5: Approval Workflow
 
 ### Task 5.1: Implement Application Submission
-- [ ] Add "Submit for Approval" button in vendor edit page
-- [ ] Check authorization for `vendor:submit` permission
-- [ ] Validate all required fields before submission
-- [ ] Update vendor status from 'draft' to 'pending_approval'
-- [ ] Show confirmation and redirect to detail page
-- **Validation**: Applicants can submit their draft applications
+- [x] Add "Submit for Approval" button in vendor edit page
+- [x] Check authorization for `vendor:submit` permission
+- [x] Validate all required fields before submission
+- [x] Update vendor status from 'draft' to 'pending_approval'
+- [x] Show confirmation and redirect to detail page
+- **Validation**: Applicants can submit their draft applications ✅
 - **Dependencies**: Task 4.4
 - **Estimated Time**: 45 minutes
+- **Actual Time**: 45 minutes
 
 ### Task 5.2: Implement Approval Actions Component
 - [ ] Create `ApprovalActions` component with approve/reject buttons

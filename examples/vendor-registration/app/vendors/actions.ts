@@ -167,6 +167,92 @@ export async function deleteVendorAction(
 }
 
 /**
+ * 取引先を申請するServer Action
+ *
+ * @param id - 取引先ID
+ * @returns 申請結果
+ */
+export async function submitVendorAction(
+  id: string
+): Promise<ActionResult<VendorApplication>> {
+  try {
+    // ユーザーセッションを取得
+    const user = getCurrentUser();
+    if (!user) {
+      return {
+        success: false,
+        error: 'ログインが必要です',
+      };
+    }
+
+    // 既存の取引先を取得
+    const existingVendor = mockDataStore.getById(id);
+    if (!existingVendor) {
+      return {
+        success: false,
+        error: '取引先が見つかりません',
+      };
+    }
+
+    // ステータスチェック
+    if (existingVendor.status !== 'draft') {
+      return {
+        success: false,
+        error: '下書き状態の申請のみ提出できます',
+      };
+    }
+
+    // 認可チェック
+    const authResponse = await authClient.authorize({
+      userId: user.id,
+      action: 'submit',
+      resourceType: 'vendor',
+      resourceId: id,
+      context: {
+        status: existingVendor.status,
+        ownerId: existingVendor.submittedBy,
+      },
+    });
+
+    if (authResponse.decision !== 'ALLOW') {
+      return {
+        success: false,
+        error: '取引先を申請する権限がありません',
+      };
+    }
+
+    // ステータスを更新
+    const submittedVendor = mockDataStore.update(id, {
+      status: 'pending_approval',
+      submittedAt: new Date(),
+      updatedAt: new Date(),
+    });
+
+    if (!submittedVendor) {
+      return {
+        success: false,
+        error: '取引先の申請に失敗しました',
+      };
+    }
+
+    // キャッシュを無効化
+    revalidatePath('/vendors');
+    revalidatePath(`/vendors/${id}`);
+
+    return {
+      success: true,
+      data: submittedVendor,
+    };
+  } catch (error) {
+    console.error('Failed to submit vendor:', error);
+    return {
+      success: false,
+      error: '取引先の申請に失敗しました',
+    };
+  }
+}
+
+/**
  * 取引先を作成するServer Action
  *
  * @param request - 取引先作成リクエスト
