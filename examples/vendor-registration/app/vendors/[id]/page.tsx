@@ -11,6 +11,8 @@ import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { ProtectedButton } from '@/components/ProtectedButton';
 import { ApprovalActions } from '@/components/ApprovalActions';
+import { VendorDetailSkeleton } from '@/components/loading-skeleton';
+import { ErrorDisplay } from '@/components/error-boundary';
 import { formatDate } from '@/lib/utils';
 import { checkAuthorization } from '@/lib/authorization';
 import { deleteVendorAction, approveVendorAction, rejectVendorAction } from '../actions';
@@ -230,10 +232,19 @@ export default function VendorDetailPage({ params }: { params: Promise<{ id: str
 
   // ローディング中
   if (loading) {
+    return <VendorDetailSkeleton />;
+  }
+
+  // エラー発生時
+  if (error) {
     return (
       <div className="container py-12">
         <div className="mx-auto max-w-4xl">
-          <div className="text-center text-muted-foreground">読み込み中...</div>
+          <ErrorDisplay
+            error={error}
+            onRetry={() => window.location.reload()}
+            title="取引先情報の読み込みエラー"
+          />
         </div>
       </div>
     );

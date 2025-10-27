@@ -8,6 +8,8 @@ import { type VendorApplication } from '@/types/vendor';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
+import { DashboardSkeleton } from '@/components/loading-skeleton';
+import { ErrorDisplay } from '@/components/error-boundary';
 import { formatDate } from '@/lib/utils';
 
 /**
@@ -60,6 +62,7 @@ export default function DashboardPage() {
     rejected: 0,
   });
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
     const loadDashboard = async () => {
@@ -69,6 +72,7 @@ export default function DashboardPage() {
       }
 
       try {
+        setError(null);
         const allVendors = getMockVendors();
         let filteredVendors: VendorApplication[] = [];
 
@@ -95,8 +99,9 @@ export default function DashboardPage() {
 
         setVendors(filteredVendors);
         setStats(newStats);
-      } catch (error) {
-        console.error('Failed to load dashboard:', error);
+      } catch (err) {
+        console.error('Failed to load dashboard:', err);
+        setError(err instanceof Error ? err.message : 'ダッシュボードの読み込みに失敗しました');
       } finally {
         setLoading(false);
       }
@@ -128,13 +133,19 @@ export default function DashboardPage() {
 
   // ローディング中
   if (loading || sessionLoading) {
+    return <DashboardSkeleton />;
+  }
+
+  // エラー発生時
+  if (error) {
     return (
       <div className="container py-12">
         <div className="mx-auto max-w-6xl">
-          <div className="mb-8">
-            <h1 className="text-3xl font-bold">ダッシュボード</h1>
-          </div>
-          <div className="text-center text-muted-foreground">読み込み中...</div>
+          <ErrorDisplay
+            error={error}
+            onRetry={() => window.location.reload()}
+            title="ダッシュボードの読み込みエラー"
+          />
         </div>
       </div>
     );
