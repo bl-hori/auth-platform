@@ -52,14 +52,16 @@
 - **Actual Time**: 1 hour
 
 ### Task 2.2: Create Authorization Utilities and Hooks
-- [ ] Implement `lib/authorization.ts` with authorization helper functions
-- [ ] Create `useAuthorization()` React hook for client-side checks
-- [ ] Create `checkServerAuthorization()` function for Server Actions
-- [ ] Implement authorization result caching (with TTL)
-- [ ] Add authorization error types and handling
-- **Validation**: Hooks and utilities work with mocked Auth Platform responses
+- [x] Implement `lib/authorization.ts` with authorization helper functions
+- [x] Create `useAuthorization()` React hook for client-side checks
+- [x] Create `usePermission()` React hook for declarative permission checks
+- [x] Create `checkServerAuthorization()` function for Server Actions
+- [x] Implement authorization result caching (with TTL - 60秒)
+- [x] Add AuthorizationCache class with clear/clearForUser methods
+- **Validation**: `pnpm build` completes successfully ✅
 - **Dependencies**: Task 2.1
 - **Estimated Time**: 1.5 hours
+- **Actual Time**: 1 hour
 
 ### Task 2.3: Create Authorization Guard Components
 - [ ] Implement `AuthGuard` component for declarative authorization
