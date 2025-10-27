@@ -6,7 +6,6 @@ buildscript {
 
 plugins {
     id 'java'
-    id 'scala'
     id 'org.springframework.boot' version '3.2.1'
     id 'io.spring.dependency-management' version '1.1.4'
     id 'checkstyle'
@@ -14,7 +13,6 @@ plugins {
     id 'org.owasp.dependencycheck' version '9.0.9'
     id 'org.sonarqube' version '4.4.1.3373'
     id 'org.flywaydb.flyway' version '9.22.3'
-    id 'io.gatling.gradle' version '3.11.5.2'
 }
 
 group = 'io.authplatform'
@@ -78,10 +76,6 @@ dependencies {
     testImplementation 'org.testcontainers:postgresql:1.19.3'
     testImplementation 'org.testcontainers:junit-jupiter:1.19.3'
     testImplementation 'io.rest-assured:rest-assured:5.4.0'
-
-    // Gatling dependencies
-    gatling 'org.scala-lang:scala-library:2.13.12'
-    gatling 'io.gatling.highcharts:gatling-charts-highcharts:3.11.5'
 }
 
 tasks.named('test') {
@@ -213,13 +207,4 @@ sonar {
             "**/opa/dto/**"
         ].join(",")
     }
-}
-
-// Gatling configuration
-gatling {
-    // Logback config file
-    logbackRootLevel = 'WARN'
-
-    // Enterprise API tokens (if using Gatling Enterprise)
-    // enterpriseApiToken = System.getenv('GATLING_ENTERPRISE_API_TOKEN')
 }
