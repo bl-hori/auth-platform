@@ -138,15 +138,16 @@
 - **Actual Time**: 1 hour
 
 ### Task 4.4: Implement Vendor Edit
-- [ ] Create `/app/vendors/[id]/edit/page.tsx` with edit form
-- [ ] Add authorization check for `vendor:update:own` or `vendor:update:all`
-- [ ] Pre-populate form with existing vendor data
-- [ ] Implement update Server Action with authorization check
-- [ ] Restrict editing based on vendor status (draft vs submitted)
-- [ ] Add optimistic UI updates
-- **Validation**: Users can edit only authorized vendors based on ownership and status
+- [x] Create `/app/vendors/[id]/edit/page.tsx` with edit form
+- [x] Add authorization check for `vendor:update:own` or `vendor:update:all`
+- [x] Pre-populate form with existing vendor data
+- [x] Implement update Server Action with authorization check
+- [x] Restrict editing based on vendor status (draft vs submitted)
+- [x] Add optimistic UI updates
+- **Validation**: Users can edit only authorized vendors based on ownership and status ✅
 - **Dependencies**: Task 4.3
 - **Estimated Time**: 1.5 hours
+- **Actual Time**: 1 hour
 
 ### Task 4.5: Implement Vendor Deletion
 - [ ] Add delete functionality in vendor detail page
