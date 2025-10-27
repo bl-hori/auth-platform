@@ -12,6 +12,7 @@ import { Button } from '@/components/ui/button';
 import { ProtectedButton } from '@/components/ProtectedButton';
 import { formatDate } from '@/lib/utils';
 import { checkAuthorization } from '@/lib/authorization';
+import { deleteVendorAction } from '../actions';
 
 /**
  * ステータスバッジのスタイル
@@ -52,6 +53,7 @@ export default function VendorDetailPage({ params }: { params: Promise<{ id: str
   const [canDelete, setCanDelete] = useState(false);
   const [canApprove, setCanApprove] = useState(false);
   const [authorized, setAuthorized] = useState(false);
+  const [deleting, setDeleting] = useState(false);
 
   useEffect(() => {
     params.then((p) => setVendorId(p.id));
@@ -123,6 +125,34 @@ export default function VendorDetailPage({ params }: { params: Promise<{ id: str
       console.error('Failed to load vendor:', error);
     } finally {
       setLoading(false);
+    }
+  };
+
+  /**
+   * 削除処理
+   */
+  const handleDelete = async () => {
+    if (!vendor || !vendorId) return;
+
+    if (!confirm(`「${vendor.companyName}」を削除しますか？\nこの操作は取り消せません。`)) {
+      return;
+    }
+
+    setDeleting(true);
+    try {
+      const result = await deleteVendorAction(vendorId);
+
+      if (result.success) {
+        // 一覧ページにリダイレクト
+        router.push('/vendors');
+      } else {
+        alert(result.error || '削除に失敗しました');
+      }
+    } catch (error) {
+      console.error('Delete error:', error);
+      alert('予期しないエラーが発生しました');
+    } finally {
+      setDeleting(false);
     }
   };
 
@@ -237,14 +267,10 @@ export default function VendorDetailPage({ params }: { params: Promise<{ id: str
               context={{ status: vendor.status, ownerId: vendor.submittedBy }}
               variant="outline"
               className="text-destructive hover:text-destructive"
-              onClick={() => {
-                if (confirm(`「${vendor.companyName}」を削除しますか？`)) {
-                  // 削除処理は後のタスクで実装
-                  alert('削除機能は後のタスクで実装されます');
-                }
-              }}
+              onClick={handleDelete}
+              disabled={deleting}
             >
-              削除
+              {deleting ? '削除中...' : '削除'}
             </ProtectedButton>
           )}
         </div>
