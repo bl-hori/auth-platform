@@ -10,9 +10,10 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { ProtectedButton } from '@/components/ProtectedButton';
+import { ApprovalActions } from '@/components/ApprovalActions';
 import { formatDate } from '@/lib/utils';
 import { checkAuthorization } from '@/lib/authorization';
-import { deleteVendorAction } from '../actions';
+import { deleteVendorAction, approveVendorAction, rejectVendorAction } from '../actions';
 
 /**
  * ステータスバッジのスタイル
@@ -54,6 +55,8 @@ export default function VendorDetailPage({ params }: { params: Promise<{ id: str
   const [canApprove, setCanApprove] = useState(false);
   const [authorized, setAuthorized] = useState(false);
   const [deleting, setDeleting] = useState(false);
+  const [success, setSuccess] = useState<string | null>(null);
+  const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
     params.then((p) => setVendorId(p.id));
@@ -156,6 +159,56 @@ export default function VendorDetailPage({ params }: { params: Promise<{ id: str
     }
   };
 
+  /**
+   * 承認処理
+   */
+  const handleApprove = async (comment: string) => {
+    if (!vendorId) return;
+
+    setError(null);
+    setSuccess(null);
+
+    try {
+      const result = await approveVendorAction(vendorId, comment);
+
+      if (result.success && result.data) {
+        setSuccess('取引先申請を承認しました');
+        // データを再読み込み
+        await loadVendor();
+      } else {
+        setError(result.error || '承認に失敗しました');
+      }
+    } catch (err) {
+      console.error('Approve error:', err);
+      setError('予期しないエラーが発生しました');
+    }
+  };
+
+  /**
+   * 却下処理
+   */
+  const handleReject = async (comment: string) => {
+    if (!vendorId) return;
+
+    setError(null);
+    setSuccess(null);
+
+    try {
+      const result = await rejectVendorAction(vendorId, comment);
+
+      if (result.success && result.data) {
+        setSuccess('取引先申請を却下しました');
+        // データを再読み込み
+        await loadVendor();
+      } else {
+        setError(result.error || '却下に失敗しました');
+      }
+    } catch (err) {
+      console.error('Reject error:', err);
+      setError('予期しないエラーが発生しました');
+    }
+  };
+
   // 未ログイン
   if (!user) {
     return (
@@ -245,6 +298,20 @@ export default function VendorDetailPage({ params }: { params: Promise<{ id: str
           </Link>
         </div>
 
+        {/* 成功メッセージ */}
+        {success && (
+          <div className="mb-6 rounded-md bg-green-50 p-4 text-sm text-green-800">
+            {success}
+          </div>
+        )}
+
+        {/* エラーメッセージ */}
+        {error && (
+          <div className="mb-6 rounded-md bg-destructive/10 p-4 text-sm text-destructive">
+            {error}
+          </div>
+        )}
+
         {/* アクションボタン */}
         <div className="mb-6 flex flex-wrap gap-3">
           {canEdit && (
@@ -254,9 +321,9 @@ export default function VendorDetailPage({ params }: { params: Promise<{ id: str
           )}
 
           {canApprove && vendor.status === 'pending_approval' && (
-            <Link href={`/vendors/${vendor.id}#approval`}>
+            <a href="#approval">
               <Button variant="default">承認/却下</Button>
-            </Link>
+            </a>
           )}
 
           {canDelete && (
@@ -353,6 +420,19 @@ export default function VendorDetailPage({ params }: { params: Promise<{ id: str
             </div>
           </CardContent>
         </Card>
+
+        {/* 承認アクション（承認待ちの場合のみ表示） */}
+        {vendor.status === 'pending_approval' && (
+          <div className="mb-6">
+            <ApprovalActions
+              vendorId={vendor.id}
+              vendorName={vendor.companyName}
+              status={vendor.status}
+              onApprove={handleApprove}
+              onReject={handleReject}
+            />
+          </div>
+        )}
 
         {/* 承認情報（承認済みまたは却下の場合のみ表示） */}
         {(vendor.status === 'approved' || vendor.status === 'rejected') && (

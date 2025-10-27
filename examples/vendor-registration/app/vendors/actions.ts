@@ -253,6 +253,198 @@ export async function submitVendorAction(
 }
 
 /**
+ * 取引先を承認するServer Action
+ *
+ * @param id - 取引先ID
+ * @param comment - 承認コメント（オプション）
+ * @returns 承認結果
+ */
+export async function approveVendorAction(
+  id: string,
+  comment?: string
+): Promise<ActionResult<VendorApplication>> {
+  try {
+    // ユーザーセッションを取得
+    const user = getCurrentUser();
+    if (!user) {
+      return {
+        success: false,
+        error: 'ログインが必要です',
+      };
+    }
+
+    // 既存の取引先を取得
+    const existingVendor = mockDataStore.getById(id);
+    if (!existingVendor) {
+      return {
+        success: false,
+        error: '取引先が見つかりません',
+      };
+    }
+
+    // ステータスチェック
+    if (existingVendor.status !== 'pending_approval') {
+      return {
+        success: false,
+        error: '承認待ち状態の申請のみ承認できます',
+      };
+    }
+
+    // 認可チェック
+    const authResponse = await authClient.authorize({
+      userId: user.id,
+      action: 'approve',
+      resourceType: 'vendor',
+      resourceId: id,
+      context: {
+        status: existingVendor.status,
+      },
+    });
+
+    if (authResponse.decision !== 'ALLOW') {
+      return {
+        success: false,
+        error: '取引先を承認する権限がありません',
+      };
+    }
+
+    // ステータスを更新
+    const approvedVendor = mockDataStore.update(id, {
+      status: 'approved',
+      reviewedBy: user.id,
+      reviewedAt: new Date(),
+      reviewComment: comment || '',
+      updatedAt: new Date(),
+    });
+
+    if (!approvedVendor) {
+      return {
+        success: false,
+        error: '取引先の承認に失敗しました',
+      };
+    }
+
+    // キャッシュを無効化
+    revalidatePath('/vendors');
+    revalidatePath(`/vendors/${id}`);
+
+    // TODO: 申請者に通知を送信（本実装では未実装）
+    console.log(`[Notification] Vendor ${id} approved by ${user.id}`);
+
+    return {
+      success: true,
+      data: approvedVendor,
+    };
+  } catch (error) {
+    console.error('Failed to approve vendor:', error);
+    return {
+      success: false,
+      error: '取引先の承認に失敗しました',
+    };
+  }
+}
+
+/**
+ * 取引先を却下するServer Action
+ *
+ * @param id - 取引先ID
+ * @param comment - 却下理由（必須）
+ * @returns 却下結果
+ */
+export async function rejectVendorAction(
+  id: string,
+  comment: string
+): Promise<ActionResult<VendorApplication>> {
+  try {
+    // ユーザーセッションを取得
+    const user = getCurrentUser();
+    if (!user) {
+      return {
+        success: false,
+        error: 'ログインが必要です',
+      };
+    }
+
+    // コメントチェック
+    if (!comment || !comment.trim()) {
+      return {
+        success: false,
+        error: '却下理由を入力してください',
+      };
+    }
+
+    // 既存の取引先を取得
+    const existingVendor = mockDataStore.getById(id);
+    if (!existingVendor) {
+      return {
+        success: false,
+        error: '取引先が見つかりません',
+      };
+    }
+
+    // ステータスチェック
+    if (existingVendor.status !== 'pending_approval') {
+      return {
+        success: false,
+        error: '承認待ち状態の申請のみ却下できます',
+      };
+    }
+
+    // 認可チェック
+    const authResponse = await authClient.authorize({
+      userId: user.id,
+      action: 'approve',
+      resourceType: 'vendor',
+      resourceId: id,
+      context: {
+        status: existingVendor.status,
+      },
+    });
+
+    if (authResponse.decision !== 'ALLOW') {
+      return {
+        success: false,
+        error: '取引先を却下する権限がありません',
+      };
+    }
+
+    // ステータスを更新
+    const rejectedVendor = mockDataStore.update(id, {
+      status: 'rejected',
+      reviewedBy: user.id,
+      reviewedAt: new Date(),
+      reviewComment: comment,
+      updatedAt: new Date(),
+    });
+
+    if (!rejectedVendor) {
+      return {
+        success: false,
+        error: '取引先の却下に失敗しました',
+      };
+    }
+
+    // キャッシュを無効化
+    revalidatePath('/vendors');
+    revalidatePath(`/vendors/${id}`);
+
+    // TODO: 申請者に通知を送信（本実装では未実装）
+    console.log(`[Notification] Vendor ${id} rejected by ${user.id}`);
+
+    return {
+      success: true,
+      data: rejectedVendor,
+    };
+  } catch (error) {
+    console.error('Failed to reject vendor:', error);
+    return {
+      success: false,
+      error: '取引先の却下に失敗しました',
+    };
+  }
+}
+
+/**
  * 取引先を作成するServer Action
  *
  * @param request - 取引先作成リクエスト
