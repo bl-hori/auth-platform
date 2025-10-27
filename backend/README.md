@@ -65,16 +65,41 @@ curl http://localhost:8080/actuator/health
 
 ### Testing
 
+The backend uses **Testcontainers** for integration tests, providing isolated PostgreSQL databases for each test run. Docker must be installed and running.
+
 ```bash
-# Run all tests
+# Run all tests (272 tests including unit, integration, and repository tests)
 ./gradlew test
 
-# Run with coverage
+# Run specific test class
+./gradlew test --tests "io.authplatform.platform.api.controller.AuthorizationControllerTest"
+
+# Run with coverage report
 ./gradlew test jacocoTestReport
 
 # View coverage report
 open build/reports/jacoco/test/html/index.html
+
+# View test results
+open build/reports/tests/test/index.html
 ```
+
+**Test Infrastructure:**
+- **Testcontainers**: Automatic PostgreSQL 15 container management
+- **No manual setup required**: Tests automatically start/stop database containers
+- **Shared container**: Single container instance reused across all test classes for performance
+- **Flyway migrations**: Database schema automatically applied to test containers
+- **Test isolation**: Each test runs in its own transaction (auto-rollback)
+
+**Prerequisites for running tests:**
+- Docker installed and running
+- No manual PostgreSQL setup required
+
+**Test Categories:**
+- Unit Tests: Service and utility classes
+- Integration Tests: Full Spring context with database
+- Repository Tests: JPA repository operations with real database
+- API Tests: REST endpoint testing with MockMvc
 
 ### Code Quality
 

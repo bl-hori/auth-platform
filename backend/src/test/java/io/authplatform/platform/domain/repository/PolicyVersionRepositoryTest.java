@@ -6,11 +6,11 @@ import io.authplatform.platform.domain.entity.Policy.PolicyType;
 import io.authplatform.platform.domain.entity.PolicyVersion;
 import io.authplatform.platform.domain.entity.PolicyVersion.ValidationStatus;
 import io.authplatform.platform.domain.entity.User;
+import io.authplatform.platform.integration.BaseIntegrationTest;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.orm.jpa.DataJpaTest;
-import org.springframework.test.context.ActiveProfiles;
 
 import java.util.List;
 import java.util.Map;
@@ -22,9 +22,8 @@ import static org.assertj.core.api.Assertions.assertThat;
  * Integration tests for {@link PolicyVersionRepository}.
  */
 @DataJpaTest
-@ActiveProfiles("test")
 @org.springframework.boot.test.autoconfigure.jdbc.AutoConfigureTestDatabase(replace = org.springframework.boot.test.autoconfigure.jdbc.AutoConfigureTestDatabase.Replace.NONE)
-class PolicyVersionRepositoryTest {
+class PolicyVersionRepositoryTest extends BaseIntegrationTest {
 
     @Autowired
     private PolicyVersionRepository policyVersionRepository;

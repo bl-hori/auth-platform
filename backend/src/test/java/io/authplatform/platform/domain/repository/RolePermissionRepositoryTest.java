@@ -5,11 +5,11 @@ import io.authplatform.platform.domain.entity.Permission;
 import io.authplatform.platform.domain.entity.Permission.PermissionEffect;
 import io.authplatform.platform.domain.entity.Role;
 import io.authplatform.platform.domain.entity.RolePermission;
+import io.authplatform.platform.integration.BaseIntegrationTest;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.orm.jpa.DataJpaTest;
-import org.springframework.test.context.ActiveProfiles;
 
 import java.util.List;
 import java.util.Optional;
@@ -33,9 +33,8 @@ import static org.assertj.core.api.Assertions.assertThat;
  * </ul>
  */
 @DataJpaTest
-@ActiveProfiles("test")
 @org.springframework.boot.test.autoconfigure.jdbc.AutoConfigureTestDatabase(replace = org.springframework.boot.test.autoconfigure.jdbc.AutoConfigureTestDatabase.Replace.NONE)
-class RolePermissionRepositoryTest {
+class RolePermissionRepositoryTest extends BaseIntegrationTest {
 
     @Autowired
     private RolePermissionRepository rolePermissionRepository;

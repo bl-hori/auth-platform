@@ -6,6 +6,7 @@ import io.authplatform.platform.api.dto.AuthorizationResponse;
 import io.authplatform.platform.api.dto.BatchAuthorizationRequest;
 import io.authplatform.platform.api.dto.BatchAuthorizationResponse;
 import io.authplatform.platform.config.ApiKeyProperties;
+import io.authplatform.platform.integration.BaseIntegrationTest;
 import io.authplatform.platform.service.AuthorizationService;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
@@ -15,7 +16,6 @@ import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMock
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.http.MediaType;
-import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.web.servlet.MockMvc;
 
 import java.util.Arrays;
@@ -33,9 +33,8 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
  */
 @SpringBootTest
 @AutoConfigureMockMvc
-@ActiveProfiles("test")
 @DisplayName("Authorization API Tests")
-class AuthorizationControllerTest {
+class AuthorizationControllerTest extends BaseIntegrationTest {
 
     @Autowired
     private MockMvc mockMvc;

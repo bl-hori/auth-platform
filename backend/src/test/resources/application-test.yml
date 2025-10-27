@@ -1,9 +1,7 @@
 spring:
   datasource:
-    # Use separate test database
-    url: jdbc:postgresql://${DB_HOST:localhost}:${DB_PORT:5432}/${DB_NAME:authplatform_test}
-    username: ${DB_USER:authplatform}
-    password: ${DB_PASSWORD:authplatform}
+    # Database connection is provided dynamically by Testcontainers via @DynamicPropertySource
+    # in BaseIntegrationTest. No hardcoded values needed here.
     driver-class-name: org.postgresql.Driver
 
   jpa:

@@ -2,11 +2,11 @@ package io.authplatform.platform.domain.repository;
 
 import io.authplatform.platform.domain.entity.Organization;
 import io.authplatform.platform.domain.entity.Organization.OrganizationStatus;
+import io.authplatform.platform.integration.BaseIntegrationTest;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.orm.jpa.DataJpaTest;
-import org.springframework.test.context.ActiveProfiles;
 
 import java.util.List;
 import java.util.Map;
@@ -21,10 +21,9 @@ import static org.assertj.core.api.Assertions.assertThat;
  * Tests ensure proper CRUD operations, soft delete functionality, and custom queries.
  */
 @DataJpaTest
-@ActiveProfiles("test")
 @org.springframework.boot.test.autoconfigure.jdbc.AutoConfigureTestDatabase(replace = org.springframework.boot.test.autoconfigure.jdbc.AutoConfigureTestDatabase.Replace.NONE)
 @DisplayName("Organization Repository Tests")
-class OrganizationRepositoryTest {
+class OrganizationRepositoryTest extends BaseIntegrationTest {
 
     @Autowired
     private OrganizationRepository organizationRepository;
