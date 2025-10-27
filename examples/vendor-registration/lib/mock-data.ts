@@ -146,6 +146,13 @@ export function getPendingVendors(): VendorApplication[] {
 }
 
 /**
+ * 全ての取引先申請を取得
+ */
+export function getMockVendors(): VendorApplication[] {
+  return [...MOCK_VENDORS];
+}
+
+/**
  * 次の取引先申請IDを生成
  */
 let vendorIdCounter = MOCK_VENDORS.length + 1;
