@@ -1,5 +1,6 @@
 package io.authplatform.platform.config;
 
+import io.authplatform.platform.integration.BaseIntegrationTest;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -20,8 +21,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 @SpringBootTest
 @AutoConfigureMockMvc
 @DisplayName("Security Configuration Integration Tests")
-@org.springframework.test.context.ActiveProfiles("test")
-class SecurityConfigIntegrationTest {
+class SecurityConfigIntegrationTest extends BaseIntegrationTest {
 
     @Autowired
     private MockMvc mockMvc;

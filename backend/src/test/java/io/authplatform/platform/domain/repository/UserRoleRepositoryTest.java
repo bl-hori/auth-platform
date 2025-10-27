@@ -4,11 +4,11 @@ import io.authplatform.platform.domain.entity.Organization;
 import io.authplatform.platform.domain.entity.Role;
 import io.authplatform.platform.domain.entity.User;
 import io.authplatform.platform.domain.entity.UserRole;
+import io.authplatform.platform.integration.BaseIntegrationTest;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.orm.jpa.DataJpaTest;
-import org.springframework.test.context.ActiveProfiles;
 
 import java.time.OffsetDateTime;
 import java.util.List;
@@ -31,9 +31,8 @@ import static org.assertj.core.api.Assertions.assertThat;
  * </ul>
  */
 @DataJpaTest
-@ActiveProfiles("test")
 @org.springframework.boot.test.autoconfigure.jdbc.AutoConfigureTestDatabase(replace = org.springframework.boot.test.autoconfigure.jdbc.AutoConfigureTestDatabase.Replace.NONE)
-class UserRoleRepositoryTest {
+class UserRoleRepositoryTest extends BaseIntegrationTest {
 
     @Autowired
     private UserRoleRepository userRoleRepository;

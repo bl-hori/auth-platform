@@ -3,6 +3,7 @@ package io.authplatform.platform.security;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import io.authplatform.platform.api.dto.AuthorizationRequest;
 import io.authplatform.platform.api.dto.AuthorizationResponse;
+import io.authplatform.platform.integration.BaseIntegrationTest;
 import io.authplatform.platform.service.AuthorizationService;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -11,7 +12,6 @@ import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMock
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.http.MediaType;
-import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.context.TestPropertySource;
 import org.springframework.test.web.servlet.MockMvc;
 
@@ -30,7 +30,6 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
  */
 @SpringBootTest
 @AutoConfigureMockMvc
-@ActiveProfiles("test")
 @TestPropertySource(properties = {
         "auth-platform.rate-limit.enabled=true",
         "auth-platform.rate-limit.capacity=5",
@@ -42,7 +41,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
         "auth-platform.security.api-keys.keys.test-key-isolation-2=test-org"
 })
 @DisplayName("Rate Limit Integration Tests")
-class RateLimitIntegrationTest {
+class RateLimitIntegrationTest extends BaseIntegrationTest {
 
     @Autowired
     private MockMvc mockMvc;

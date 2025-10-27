@@ -5,8 +5,6 @@ import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.context.DynamicPropertyRegistry;
 import org.springframework.test.context.DynamicPropertySource;
 import org.testcontainers.containers.PostgreSQLContainer;
-import org.testcontainers.junit.jupiter.Container;
-import org.testcontainers.junit.jupiter.Testcontainers;
 
 /**
  * Base class for integration tests using Testcontainers.
@@ -38,7 +36,6 @@ import org.testcontainers.junit.jupiter.Testcontainers;
  * }</pre>
  */
 @ActiveProfiles("test")
-@Testcontainers
 public abstract class BaseIntegrationTest {
 
     /**
@@ -47,14 +44,20 @@ public abstract class BaseIntegrationTest {
      * <p>Using a single static container improves test performance by avoiding
      * container startup overhead for each test class. The container is
      * automatically started before the first test and stopped after all tests complete.
+     *
+     * <p>This container is started manually in a static initializer block to ensure
+     * it's shared across all test classes and only started once.
      */
-    @Container
-    protected static final PostgreSQLContainer<?> POSTGRES_CONTAINER =
-            new PostgreSQLContainer<>("postgres:15-alpine")
-                    .withDatabaseName("authplatform_test")
-                    .withUsername("test")
-                    .withPassword("test")
-                    .withReuse(true);
+    protected static final PostgreSQLContainer<?> POSTGRES_CONTAINER;
+
+    static {
+        POSTGRES_CONTAINER = new PostgreSQLContainer<>("postgres:15-alpine")
+                .withDatabaseName("authplatform_test")
+                .withUsername("test")
+                .withPassword("test")
+                .withReuse(true);
+        POSTGRES_CONTAINER.start();
+    }
 
     /**
      * Dynamically configure Spring datasource properties from the Testcontainer.
