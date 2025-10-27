@@ -92,6 +92,11 @@ export function logout(): void {
 }
 
 /**
+ * セッションをクリアする（logoutのエイリアス）
+ */
+export const clearSession = logout;
+
+/**
  * ログイン状態の確認
  */
 export function isAuthenticated(): boolean {
