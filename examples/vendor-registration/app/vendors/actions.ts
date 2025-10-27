@@ -95,6 +95,78 @@ export async function updateVendorAction(
 }
 
 /**
+ * 取引先を削除するServer Action
+ *
+ * @param id - 取引先ID
+ * @returns 削除結果
+ */
+export async function deleteVendorAction(
+  id: string
+): Promise<ActionResult<void>> {
+  try {
+    // ユーザーセッションを取得
+    const user = getCurrentUser();
+    if (!user) {
+      return {
+        success: false,
+        error: 'ログインが必要です',
+      };
+    }
+
+    // 既存の取引先を取得
+    const existingVendor = mockDataStore.getById(id);
+    if (!existingVendor) {
+      return {
+        success: false,
+        error: '取引先が見つかりません',
+      };
+    }
+
+    // 認可チェック
+    const authResponse = await authClient.authorize({
+      userId: user.id,
+      action: 'delete',
+      resourceType: 'vendor',
+      resourceId: id,
+      context: {
+        status: existingVendor.status,
+        ownerId: existingVendor.submittedBy,
+      },
+    });
+
+    if (authResponse.decision !== 'ALLOW') {
+      return {
+        success: false,
+        error: '取引先を削除する権限がありません',
+      };
+    }
+
+    // 取引先を削除
+    const deleted = mockDataStore.delete(id);
+
+    if (!deleted) {
+      return {
+        success: false,
+        error: '取引先の削除に失敗しました',
+      };
+    }
+
+    // キャッシュを無効化
+    revalidatePath('/vendors');
+
+    return {
+      success: true,
+    };
+  } catch (error) {
+    console.error('Failed to delete vendor:', error);
+    return {
+      success: false,
+      error: '取引先の削除に失敗しました',
+    };
+  }
+}
+
+/**
  * 取引先を作成するServer Action
  *
  * @param request - 取引先作成リクエスト

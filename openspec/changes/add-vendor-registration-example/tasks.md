@@ -150,14 +150,15 @@
 - **Actual Time**: 1 hour
 
 ### Task 4.5: Implement Vendor Deletion
-- [ ] Add delete functionality in vendor detail page
-- [ ] Implement authorization check for `vendor:delete:own` or `vendor:delete:all`
-- [ ] Add confirmation dialog before deletion
-- [ ] Implement delete Server Action with authorization check
-- [ ] Redirect to list page after successful deletion
-- **Validation**: Users can delete only authorized vendors
+- [x] Add delete functionality in vendor detail page
+- [x] Implement authorization check for `vendor:delete:own` or `vendor:delete:all`
+- [x] Add confirmation dialog before deletion
+- [x] Implement delete Server Action with authorization check
+- [x] Redirect to list page after successful deletion
+- **Validation**: Users can delete only authorized vendors ✅
 - **Dependencies**: Task 4.3
 - **Estimated Time**: 45 minutes
+- **Actual Time**: 30 minutes
 
 ## Phase 5: Approval Workflow
 
