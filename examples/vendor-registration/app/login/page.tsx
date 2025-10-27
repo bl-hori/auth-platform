@@ -8,6 +8,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Select } from '@/components/ui/select';
 import { login } from '@/lib/session';
+import { useSession } from '@/lib/session-context';
 import { MOCK_USERS } from '@/lib/mock-data';
 import { ROLE_LABELS, UserRole } from '@/types/auth';
 
@@ -20,6 +21,7 @@ import { ROLE_LABELS, UserRole } from '@/types/auth';
  */
 export default function LoginPage() {
   const router = useRouter();
+  const { refreshSession } = useSession();
   const [email, setEmail] = useState('');
   const [selectedRole, setSelectedRole] = useState<UserRole>('applicant');
   const [loading, setLoading] = useState(false);
@@ -36,6 +38,7 @@ export default function LoginPage() {
     try {
       const user = login(email);
       if (user) {
+        refreshSession();
         router.push('/dashboard');
       } else {
         setError('ユーザーが見つかりません');
@@ -57,6 +60,7 @@ export default function LoginPage() {
     try {
       const user = login('', selectedRole);
       if (user) {
+        refreshSession();
         router.push('/dashboard');
       } else {
         setError('ログインに失敗しました');
