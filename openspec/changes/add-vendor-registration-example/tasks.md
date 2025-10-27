@@ -115,15 +115,16 @@
 - **Actual Time**: 1.5 hours
 
 ### Task 4.2: Implement Vendor Creation
-- [ ] Create `/app/vendors/new/page.tsx` with vendor creation form
-- [ ] Implement `VendorForm` component with validation
-- [ ] Add authorization check for `vendor:create` permission
-- [ ] Implement form submission with Server Action
-- [ ] Add success/error toast notifications
-- [ ] Handle form validation errors
-- **Validation**: Applicants and admins can create vendors; approvers cannot
+- [x] Create `/app/vendors/new/page.tsx` with vendor creation form
+- [x] Implement `VendorForm` component with validation
+- [x] Add authorization check for `vendor:create` permission
+- [x] Implement form submission with Server Action
+- [x] Add success/error toast notifications
+- [x] Handle form validation errors
+- **Validation**: Applicants and admins can create vendors; approvers cannot ✅
 - **Dependencies**: Task 2.3, Task 3.2
 - **Estimated Time**: 1.5 hours
+- **Actual Time**: 1.5 hours
 
 ### Task 4.3: Implement Vendor Detail View
 - [ ] Create `/app/vendors/[id]/page.tsx` to display vendor details
