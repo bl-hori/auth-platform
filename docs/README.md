@@ -37,6 +37,13 @@ Auth Platformの包括的なドキュメントへようこそ。このディレ�
   - エンドポイント詳細
   - レスポンス形式
 
+- **[Authorization Guide](./AUTHORIZATION_GUIDE.md)** - 認可機能利用ガイド
+  - 認可の基本概念
+  - デモモード vs フル統合モード
+  - クライアント側統合パターン
+  - RBAC設定ガイド
+  - ベストプラクティス
+
 - **[Postman Guide](./postman-guide.md)** - Postman使用ガイド
   - コレクションのインポート
   - 環境変数の設定
@@ -74,8 +81,9 @@ Auth Platformの包括的なドキュメントへようこそ。このディレ�
 ### 初めての方
 
 1. [Getting Started](./GETTING_STARTED.md) - まずはここから
-2. [API Integration Guide](./API_INTEGRATION_GUIDE.md) - APIの使い方
-3. [Postman Collection](./auth-platform-api.postman_collection.json) - APIテスト
+2. [Authorization Guide](./AUTHORIZATION_GUIDE.md) - 認可機能の使い方
+3. [API Integration Guide](./API_INTEGRATION_GUIDE.md) - APIの使い方
+4. [Postman Collection](./auth-platform-api.postman_collection.json) - APIテスト
 
 ### 開発者向け
 
@@ -100,6 +108,7 @@ docs/
 ├── DEPLOYMENT.md                       # デプロイメントガイド
 ├── TROUBLESHOOTING.md                  # トラブルシューティング
 ├── API_INTEGRATION_GUIDE.md            # API統合ガイド
+├── AUTHORIZATION_GUIDE.md              # 認可機能利用ガイド
 ├── FRONTEND_BACKEND_INTEGRATION.md     # フロントエンド・バックエンド統合
 ├── SONARQUBE_SETUP.md                  # SonarQubeセットアップ
 ├── postman-guide.md                    # Postman使用ガイド
@@ -132,6 +141,9 @@ docs/
 | タスク | ドキュメント | セクション |
 |-------|------------|-----------|
 | API認証 | [API Integration Guide](./API_INTEGRATION_GUIDE.md) | 認証 |
+| 認可機能の実装 | [Authorization Guide](./AUTHORIZATION_GUIDE.md) | クライアント側統合 |
+| RBAC設定 | [Authorization Guide](./AUTHORIZATION_GUIDE.md) | RBAC設定ガイド |
+| デモモード設定 | [Authorization Guide](./AUTHORIZATION_GUIDE.md) | デモモード vs フル統合モード |
 | エンドポイント一覧 | [API Integration Guide](./API_INTEGRATION_GUIDE.md) | APIエンドポイント |
 | Postman使用 | [Postman Guide](./postman-guide.md) | 全体 |
 | OpenAPI仕様 | [specifications/openapi.yaml](../specifications/openapi.yaml) | 全体 |
@@ -152,6 +164,8 @@ docs/
 |------|------------|-----------|
 | 起動しない | [Troubleshooting Guide](./TROUBLESHOOTING.md) | 一般的な問題 |
 | 接続エラー | [Troubleshooting Guide](./TROUBLESHOOTING.md) | 接続エラー |
+| 認可エラー | [Authorization Guide](./AUTHORIZATION_GUIDE.md) | トラブルシューティング |
+| User not found | [Authorization Guide](./AUTHORIZATION_GUIDE.md) | トラブルシューティング |
 | パフォーマンス問題 | [Troubleshooting Guide](./TROUBLESHOOTING.md) | パフォーマンスの問題 |
 | データベース問題 | [Troubleshooting Guide](./TROUBLESHOOTING.md) | Database の問題 |
 | Docker問題 | [Troubleshooting Guide](./TROUBLESHOOTING.md) | Docker の問題 |
