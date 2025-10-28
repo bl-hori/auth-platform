@@ -52,11 +52,13 @@ public class WebConfig {
     public CorsConfigurationSource corsConfigurationSource() {
         CorsConfiguration configuration = new CorsConfiguration();
 
-        // Allow frontend origin (localhost:3000 for development)
+        // Allow frontend origins (localhost:3000 for main frontend, localhost:3001 for examples)
         // In production, this should be configured via application.yml
         configuration.setAllowedOrigins(Arrays.asList(
             "http://localhost:3000",
-            "http://127.0.0.1:3000"
+            "http://127.0.0.1:3000",
+            "http://localhost:3001",
+            "http://127.0.0.1:3001"
         ));
 
         // Allow all standard HTTP methods
