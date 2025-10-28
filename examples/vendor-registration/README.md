@@ -46,8 +46,25 @@ The default configuration uses:
 - **API Key**: `dev-key-org1-abc123` (defined in `backend/src/main/resources/application.yml`)
 - **Organization ID**: `00000000-0000-0000-0000-000000000000` (system organization)
 - **Backend URL**: `http://localhost:8080`
+- **Demo Mode**: `true` (bypasses Auth Platform API calls)
 
 **Important**: These credentials are for development only. Never use them in production!
+
+#### Demo Mode vs. Full Integration Mode
+
+This example supports two modes:
+
+**Demo Mode (Default - Recommended for Quick Start)**:
+- Set `NEXT_PUBLIC_DEMO_MODE=true` in `.env.local`
+- All authorization checks return `ALLOW` without calling Auth Platform API
+- Perfect for exploring the UI and workflow without backend setup
+- No user registration required in Auth Platform
+
+**Full Integration Mode**:
+- Set `NEXT_PUBLIC_DEMO_MODE=false` in `.env.local`
+- Real authorization checks against Auth Platform Backend
+- Requires users to be registered in Auth Platform database
+- See "Full Integration Setup" section below for details
 
 ### 3. Verify Backend Connection
 
@@ -186,7 +203,13 @@ results.responses.forEach((response, index) => {
 
 **Cause**: Backend is not running or environment variables are incorrect.
 
-**Solution**:
+**Quick Solution**: Enable Demo Mode
+```bash
+# In .env.local
+NEXT_PUBLIC_DEMO_MODE=true
+```
+
+**Full Integration Solution**:
 1. Verify backend is running: `curl http://localhost:8080/actuator/health`
 2. Check `.env.local` exists and has correct values
 3. Restart the dev server to reload environment variables: `pnpm dev`
@@ -202,12 +225,32 @@ results.responses.forEach((response, index) => {
 
 ### "User not found" Authorization Response
 
-**Cause**: The user ID doesn't exist in the Auth Platform database.
+**Cause**: The mock user IDs (user-001, user-002, user-003) don't exist in Auth Platform database.
 
-**Solution**:
-1. Create users via Auth Platform backend API or UI
-2. Use existing test user IDs for development
-3. Check that the organization ID is correct
+**Quick Solution**: Enable Demo Mode (Recommended)
+```bash
+# In .env.local
+NEXT_PUBLIC_DEMO_MODE=true
+```
+
+This allows you to explore the application without setting up users in Auth Platform.
+
+**Full Integration Solution**: Create users in Auth Platform
+```bash
+# Create user via API (example)
+curl -X POST http://localhost:8080/v1/users \
+  -H "X-API-Key: dev-key-org1-abc123" \
+  -H "X-Organization-Id: 00000000-0000-0000-0000-000000000000" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "username": "user-001",
+    "email": "tanaka@example.com",
+    "displayName": "田中太郎",
+    "status": "ACTIVE"
+  }'
+```
+
+Repeat for user-002 and user-003 to enable full authorization.
 
 ## Development
 

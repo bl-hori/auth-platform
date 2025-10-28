@@ -43,12 +43,19 @@ export class AuthPlatformClient {
   private apiKey: string;
   private organizationId: string;
   private debug: boolean;
+  private demoMode: boolean;
 
   constructor(config: AuthClientConfig, debug = false) {
     this.baseUrl = config.baseUrl;
     this.apiKey = config.apiKey;
     this.organizationId = config.organizationId;
     this.debug = debug;
+    // デモモード: NEXT_PUBLIC_DEMO_MODE=true の場合、APIを呼ばずにALLOWを返す
+    this.demoMode = process.env.NEXT_PUBLIC_DEMO_MODE === 'true';
+
+    if (this.demoMode && this.debug) {
+      console.log('[AuthPlatformClient] Running in DEMO MODE - all authorization checks will return ALLOW');
+    }
   }
 
   /**
@@ -62,6 +69,14 @@ export class AuthPlatformClient {
    * @throws エラーが発生した場合（ネットワークエラー等）
    */
   async authorize(request: AuthorizationRequest): Promise<AuthorizationResponse> {
+    // デモモード: 常にALLOWを返す
+    if (this.demoMode) {
+      return {
+        decision: 'ALLOW',
+        reason: 'Demo mode - all requests allowed',
+      };
+    }
+
     try {
       if (this.debug) {
         console.log('[AuthPlatformClient] Authorization request:', request);
@@ -120,6 +135,21 @@ export class AuthPlatformClient {
       return authResponse;
     } catch (error) {
       console.error('[AuthPlatformClient] Authorization check failed:', error);
+
+      // 開発モード: ネットワークエラーの場合はALLOWを返す（開発用のフォールバック）
+      const isDevelopment = process.env.NODE_ENV === 'development';
+      const isNetworkError = error instanceof TypeError && error.message.includes('fetch');
+
+      if (isDevelopment && isNetworkError) {
+        console.warn(
+          '[AuthPlatformClient] Development mode: Returning ALLOW for network error. ' +
+          'Please ensure Auth Platform Backend is running.'
+        );
+        return {
+          decision: 'ALLOW',
+          reason: 'Development mode fallback (backend not reachable)',
+        };
+      }
 
       // エラー時はDENYを返す（フェイルセーフ）
       return {
