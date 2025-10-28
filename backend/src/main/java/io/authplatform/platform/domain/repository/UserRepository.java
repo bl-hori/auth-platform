@@ -153,4 +153,31 @@ public interface UserRepository extends JpaRepository<User, UUID> {
      */
     @Query("SELECT u FROM User u WHERE u.organization.id = :organizationId AND LOWER(u.displayName) LIKE LOWER(:displayNamePattern) AND u.deletedAt IS NULL")
     List<User> findByDisplayNameContainingIgnoreCaseAndNotDeleted(@Param("organizationId") UUID organizationId, @Param("displayNamePattern") String displayNamePattern);
+
+    // ===== Keycloak Integration (Phase 2) =====
+
+    /**
+     * Find user by Keycloak subject (sub claim from JWT), excluding soft-deleted users.
+     *
+     * <p>This method is used for JWT authentication to quickly find users by their
+     * Keycloak ID. The keycloak_sub field is indexed for fast lookups.
+     *
+     * @param keycloakSub the Keycloak user ID (JWT sub claim)
+     * @return Optional containing the user if found and not deleted
+     * @since 0.2.0
+     */
+    Optional<User> findByKeycloakSubAndDeletedAtIsNull(String keycloakSub);
+
+    /**
+     * Find user by email across all organizations, excluding soft-deleted users.
+     *
+     * <p>This method is used during JWT authentication for user linking.
+     * When a user authenticates with JWT for the first time, we search for
+     * an existing user by email to link them with their Keycloak identity.
+     *
+     * @param email the user email
+     * @return Optional containing the user if found and not deleted
+     * @since 0.2.0
+     */
+    Optional<User> findByEmailAndDeletedAtIsNull(String email);
 }

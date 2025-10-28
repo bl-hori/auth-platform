@@ -346,4 +346,72 @@ public class UserServiceImpl implements UserService {
                 (user.getUsername() != null && user.getUsername().toLowerCase().contains(searchLower)) ||
                 (user.getDisplayName() != null && user.getDisplayName().toLowerCase().contains(searchLower));
     }
+
+    // ===== Keycloak Integration (Phase 2) =====
+
+    @Override
+    @Transactional
+    public User findOrCreateFromJwt(String keycloakSub, String email, String organizationId) {
+        log.info("Finding or creating user from JWT: keycloakSub={}, email={}, organizationId={}",
+                keycloakSub, email, organizationId);
+
+        // 1. Try to find user by keycloak_sub (fastest, indexed)
+        java.util.Optional<User> userByKeycloakSub = userRepository.findByKeycloakSubAndDeletedAtIsNull(keycloakSub);
+        if (userByKeycloakSub.isPresent()) {
+            User user = userByKeycloakSub.get();
+            log.debug("User found by keycloak_sub: userId={}", user.getId());
+
+            // Update sync timestamp
+            user.setKeycloakSyncedAt(java.time.OffsetDateTime.now());
+            userRepository.save(user);
+
+            return user;
+        }
+
+        // 2. Try to find user by email (for linking existing users)
+        java.util.Optional<User> userByEmail = userRepository.findByEmailAndDeletedAtIsNull(email);
+        if (userByEmail.isPresent()) {
+            User user = userByEmail.get();
+            log.info("Linking existing user to Keycloak: userId={}, email={}", user.getId(), email);
+
+            // Link user to Keycloak
+            user.setKeycloakSub(keycloakSub);
+            user.setKeycloakSyncedAt(java.time.OffsetDateTime.now());
+            userRepository.save(user);
+
+            return user;
+        }
+
+        // 3. Create new user (JIT Provisioning)
+        log.info("Creating new user from JWT: email={}, organizationId={}", email, organizationId);
+
+        // Validate organization exists
+        UUID orgUuid;
+        try {
+            orgUuid = UUID.fromString(organizationId);
+        } catch (IllegalArgumentException e) {
+            throw new IllegalArgumentException("Invalid organization ID format: " + organizationId, e);
+        }
+
+        Organization organization = organizationRepository.findById(orgUuid)
+                .orElseThrow(() -> new IllegalArgumentException(
+                        "Organization not found: " + organizationId));
+
+        // Create new user
+        User newUser = User.builder()
+                .organization(organization)
+                .email(email)
+                .displayName(email) // Use email as default display name
+                .keycloakSub(keycloakSub)
+                .keycloakSyncedAt(java.time.OffsetDateTime.now())
+                .status(User.UserStatus.ACTIVE)
+                .attributes(Map.of())
+                .build();
+
+        User savedUser = userRepository.save(newUser);
+        log.info("New user created via JIT provisioning: userId={}, email={}",
+                savedUser.getId(), savedUser.getEmail());
+
+        return savedUser;
+    }
 }

@@ -108,6 +108,33 @@ public class User {
     private String externalId;
 
     /**
+     * Keycloak user ID (sub claim from JWT).
+     *
+     * <p>Used for JWT authentication to link Auth Platform users with their
+     * Keycloak identities. This field is set during Just-In-Time (JIT) provisioning
+     * when a user authenticates with JWT for the first time.
+     *
+     * <p>The keycloak_sub field is indexed for fast lookups during JWT authentication.
+     *
+     * <p>Example: "550e8400-e29b-41d4-a716-446655440000"
+     *
+     * @since 0.2.0
+     */
+    @Column(name = "keycloak_sub", length = 255, unique = true)
+    private String keycloakSub;
+
+    /**
+     * Last synchronization timestamp with Keycloak.
+     *
+     * <p>Updated each time a user authenticates via JWT. Can be used to identify
+     * inactive users or users who haven't authenticated via JWT recently.
+     *
+     * @since 0.2.0
+     */
+    @Column(name = "keycloak_synced_at")
+    private OffsetDateTime keycloakSyncedAt;
+
+    /**
      * Current status of the user.
      *
      * <p>Valid values:

@@ -9,6 +9,7 @@ import org.springframework.data.domain.Pageable;
 import io.authplatform.platform.api.dto.UserRoleAssignRequest;
 import io.authplatform.platform.api.dto.UserRoleResponse;
 import io.authplatform.platform.api.dto.UserUpdateRequest;
+import io.authplatform.platform.domain.entity.User;
 import org.springframework.data.domain.Pageable;
 
 import java.util.List;
@@ -199,4 +200,53 @@ public interface UserService {
      * @throws IllegalArgumentException if user does not exist
      */
     List<UserRoleResponse> getUserRoles(UUID userId);
+
+    // ===== Keycloak Integration (Phase 2) =====
+
+    /**
+     * Find or create a user from JWT claims (Just-In-Time Provisioning).
+     *
+     * <p>This method implements JIT (Just-In-Time) user provisioning for JWT authentication.
+     * It handles three scenarios:
+     * <ol>
+     *   <li><b>Existing Keycloak user</b>: User found by keycloak_sub → return user</li>
+     *   <li><b>Existing user by email</b>: User found by email → link to Keycloak (update keycloak_sub)</li>
+     *   <li><b>New user</b>: Create new user with Keycloak identity</li>
+     * </ol>
+     *
+     * <p><b>Search Priority</b>:
+     * <ol>
+     *   <li>Search by keycloak_sub (fastest, indexed)</li>
+     *   <li>Search by email (for linking existing users)</li>
+     *   <li>Create new user if not found</li>
+     * </ol>
+     *
+     * <p><b>User Linking</b>: When an existing user (found by email) authenticates
+     * with JWT for the first time, their {@code keycloak_sub} is automatically set,
+     * linking them to their Keycloak identity.
+     *
+     * <p><b>Organization Validation</b>: The organization must exist before creating
+     * a new user. If the organization doesn't exist, an exception is thrown.
+     *
+     * <p><b>Synchronization Timestamp</b>: The {@code keycloak_synced_at} field is
+     * updated on every JWT authentication to track last sync time.
+     *
+     * <p>Example usage in JWT authentication filter:
+     * <pre>{@code
+     * String keycloakSub = jwt.getSubject();  // "550e8400-e29b-41d4-a716-446655440000"
+     * String email = jwt.getClaimAsString("email");  // "user@example.com"
+     * String orgId = jwt.getClaimAsString("organization_id");  // "org-uuid"
+     *
+     * User user = userService.findOrCreateFromJwt(keycloakSub, email, orgId);
+     * // Returns existing or newly created user
+     * }</pre>
+     *
+     * @param keycloakSub Keycloak user ID (JWT sub claim)
+     * @param email User email address
+     * @param organizationId Organization ID from JWT claim
+     * @return User entity (existing or newly created)
+     * @throws IllegalArgumentException if organization doesn't exist
+     * @since 0.2.0
+     */
+    User findOrCreateFromJwt(String keycloakSub, String email, String organizationId);
 }
