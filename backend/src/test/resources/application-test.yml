@@ -27,13 +27,13 @@ spring:
     type: none
 
 # Test security configuration
-auth-platform:
+authplatform:
   security:
     api-keys:
       enabled: true
       header-name: X-API-Key
       keys:
-        test-key: test-org
+        test-api-key-12345: test-org-id
   rate-limit:
     enabled: false  # Disable rate limiting in tests by default
     capacity: 10
@@ -42,6 +42,16 @@ auth-platform:
   opa:
     url: http://localhost:8181
     timeout-ms: 100
+  keycloak:
+    enabled: true  # Enable JWT authentication for integration tests
+    base-url: http://localhost:8180
+    realm: authplatform
+    issuer-uri: http://localhost:8180/realms/authplatform
+    jwk-set-uri: http://localhost:8180/realms/authplatform/protocol/openid-connect/certs
+    jwt:
+      public-key-cache-ttl: 3600
+      clock-skew-seconds: 30
+      expected-audience: auth-platform-backend
 
 # Disable actuator security for tests
 management:
