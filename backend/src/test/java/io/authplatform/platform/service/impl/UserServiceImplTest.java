@@ -274,4 +274,185 @@ class UserServiceImplTest {
             !user.isDeleted() && user.getStatus() == User.UserStatus.ACTIVE
         ));
     }
+
+    // ===== Keycloak Integration (Phase 2) - JIT Provisioning Tests =====
+
+    @Test
+    @DisplayName("Should find existing user by keycloak_sub")
+    void shouldFindExistingUserByKeycloakSub() {
+        // Given
+        String keycloakSub = "keycloak-sub-123";
+        String email = "user@example.com";
+        String organizationId = testOrg.getId().toString();
+
+        testUser.setKeycloakSub(keycloakSub);
+        when(userRepository.findByKeycloakSubAndDeletedAtIsNull(keycloakSub))
+                .thenReturn(Optional.of(testUser));
+        when(userRepository.save(any(User.class))).thenReturn(testUser);
+
+        // When
+        User result = userService.findOrCreateFromJwt(keycloakSub, email, organizationId);
+
+        // Then
+        assertThat(result).isNotNull();
+        assertThat(result.getId()).isEqualTo(testUser.getId());
+        assertThat(result.getKeycloakSub()).isEqualTo(keycloakSub);
+        verify(userRepository).findByKeycloakSubAndDeletedAtIsNull(keycloakSub);
+        verify(userRepository).save(any(User.class)); // Updates keycloak_synced_at
+        verify(userRepository, never()).findByEmailAndDeletedAtIsNull(anyString());
+    }
+
+    @Test
+    @DisplayName("Should link existing user by email when keycloak_sub not found")
+    void shouldLinkExistingUserByEmail() {
+        // Given
+        String keycloakSub = "new-keycloak-sub-456";
+        String email = "existing@example.com";
+        String organizationId = testOrg.getId().toString();
+
+        when(userRepository.findByKeycloakSubAndDeletedAtIsNull(keycloakSub))
+                .thenReturn(Optional.empty());
+        when(userRepository.findByEmailAndDeletedAtIsNull(email))
+                .thenReturn(Optional.of(testUser));
+        when(userRepository.save(any(User.class))).thenReturn(testUser);
+
+        // When
+        User result = userService.findOrCreateFromJwt(keycloakSub, email, organizationId);
+
+        // Then
+        assertThat(result).isNotNull();
+        assertThat(result.getId()).isEqualTo(testUser.getId());
+        assertThat(result.getKeycloakSub()).isEqualTo(keycloakSub);
+        verify(userRepository).findByKeycloakSubAndDeletedAtIsNull(keycloakSub);
+        verify(userRepository).findByEmailAndDeletedAtIsNull(email);
+        verify(userRepository).save(argThat(user ->
+            user.getKeycloakSub().equals(keycloakSub) &&
+            user.getKeycloakSyncedAt() != null
+        ));
+    }
+
+    @Test
+    @DisplayName("Should create new user when neither keycloak_sub nor email found (JIT Provisioning)")
+    void shouldCreateNewUserJitProvisioning() {
+        // Given
+        String keycloakSub = "new-keycloak-sub-789";
+        String email = "newuser@example.com";
+        String organizationId = testOrg.getId().toString();
+
+        when(userRepository.findByKeycloakSubAndDeletedAtIsNull(keycloakSub))
+                .thenReturn(Optional.empty());
+        when(userRepository.findByEmailAndDeletedAtIsNull(email))
+                .thenReturn(Optional.empty());
+        when(organizationRepository.findById(UUID.fromString(organizationId)))
+                .thenReturn(Optional.of(testOrg));
+
+        User newUser = User.builder()
+                .id(UUID.randomUUID())
+                .organization(testOrg)
+                .email(email)
+                .displayName(email)
+                .keycloakSub(keycloakSub)
+                .status(User.UserStatus.ACTIVE)
+                .attributes(Map.of())
+                .build();
+
+        when(userRepository.save(any(User.class))).thenReturn(newUser);
+
+        // When
+        User result = userService.findOrCreateFromJwt(keycloakSub, email, organizationId);
+
+        // Then
+        assertThat(result).isNotNull();
+        assertThat(result.getEmail()).isEqualTo(email);
+        assertThat(result.getKeycloakSub()).isEqualTo(keycloakSub);
+        assertThat(result.getStatus()).isEqualTo(User.UserStatus.ACTIVE);
+        verify(userRepository).findByKeycloakSubAndDeletedAtIsNull(keycloakSub);
+        verify(userRepository).findByEmailAndDeletedAtIsNull(email);
+        verify(organizationRepository).findById(UUID.fromString(organizationId));
+        verify(userRepository).save(argThat(user ->
+            user.getEmail().equals(email) &&
+            user.getKeycloakSub().equals(keycloakSub) &&
+            user.getKeycloakSyncedAt() != null &&
+            user.getStatus() == User.UserStatus.ACTIVE
+        ));
+    }
+
+    @Test
+    @DisplayName("Should throw exception when organization not found during JIT provisioning")
+    void shouldThrowExceptionWhenOrganizationNotFoundDuringJit() {
+        // Given
+        String keycloakSub = "keycloak-sub-999";
+        String email = "user@example.com";
+        String invalidOrgId = UUID.randomUUID().toString();
+
+        when(userRepository.findByKeycloakSubAndDeletedAtIsNull(keycloakSub))
+                .thenReturn(Optional.empty());
+        when(userRepository.findByEmailAndDeletedAtIsNull(email))
+                .thenReturn(Optional.empty());
+        when(organizationRepository.findById(UUID.fromString(invalidOrgId)))
+                .thenReturn(Optional.empty());
+
+        // When / Then
+        assertThatThrownBy(() ->
+            userService.findOrCreateFromJwt(keycloakSub, email, invalidOrgId)
+        )
+            .isInstanceOf(IllegalArgumentException.class)
+            .hasMessageContaining("Organization not found");
+
+        verify(userRepository).findByKeycloakSubAndDeletedAtIsNull(keycloakSub);
+        verify(userRepository).findByEmailAndDeletedAtIsNull(email);
+        verify(organizationRepository).findById(UUID.fromString(invalidOrgId));
+        verify(userRepository, never()).save(any(User.class));
+    }
+
+    @Test
+    @DisplayName("Should throw exception when organization ID format is invalid")
+    void shouldThrowExceptionWhenOrganizationIdInvalid() {
+        // Given
+        String keycloakSub = "keycloak-sub-999";
+        String email = "user@example.com";
+        String invalidOrgId = "not-a-valid-uuid";
+
+        when(userRepository.findByKeycloakSubAndDeletedAtIsNull(keycloakSub))
+                .thenReturn(Optional.empty());
+        when(userRepository.findByEmailAndDeletedAtIsNull(email))
+                .thenReturn(Optional.empty());
+
+        // When / Then
+        assertThatThrownBy(() ->
+            userService.findOrCreateFromJwt(keycloakSub, email, invalidOrgId)
+        )
+            .isInstanceOf(IllegalArgumentException.class)
+            .hasMessageContaining("Invalid organization ID format");
+
+        verify(userRepository).findByKeycloakSubAndDeletedAtIsNull(keycloakSub);
+        verify(userRepository).findByEmailAndDeletedAtIsNull(email);
+        verify(organizationRepository, never()).findById(any(UUID.class));
+        verify(userRepository, never()).save(any(User.class));
+    }
+
+    @Test
+    @DisplayName("Should update keycloak_synced_at timestamp when user found by keycloak_sub")
+    void shouldUpdateKeycloakSyncedAtWhenUserFound() {
+        // Given
+        String keycloakSub = "keycloak-sub-123";
+        String email = "user@example.com";
+        String organizationId = testOrg.getId().toString();
+
+        testUser.setKeycloakSub(keycloakSub);
+        testUser.setKeycloakSyncedAt(null); // No previous sync
+
+        when(userRepository.findByKeycloakSubAndDeletedAtIsNull(keycloakSub))
+                .thenReturn(Optional.of(testUser));
+        when(userRepository.save(any(User.class))).thenAnswer(invocation -> invocation.getArgument(0));
+
+        // When
+        User result = userService.findOrCreateFromJwt(keycloakSub, email, organizationId);
+
+        // Then
+        assertThat(result.getKeycloakSyncedAt()).isNotNull();
+        verify(userRepository).save(argThat(user ->
+            user.getKeycloakSyncedAt() != null
+        ));
+    }
 }
