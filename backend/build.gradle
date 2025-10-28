@@ -43,19 +43,10 @@ dependencies {
     implementation 'org.springframework.boot:spring-boot-starter-security'
     implementation 'org.springframework.boot:spring-boot-starter-data-redis'
 
-    // TODO: Phase 2 - JWT Authentication with Keycloak
-    // Uncomment the following dependencies when implementing JWT validation:
-    // implementation 'org.springframework.boot:spring-boot-starter-oauth2-resource-server'
-    // implementation 'org.springframework.boot:spring-boot-starter-oauth2-client'
-    //
-    // Required for JWT token parsing and validation:
-    // implementation 'org.springframework.security:spring-security-oauth2-jose'
-    // implementation 'com.nimbusds:nimbus-jose-jwt:9.37.3'
-    //
-    // Version notes:
-    // - spring-boot-starter-oauth2-resource-server: Included in Spring Boot 3.2.1
-    // - Provides JWT validation and public key caching via JWK Set URI
-    // - No additional configuration needed beyond application.yml
+    // Phase 2: JWT Authentication with Keycloak
+    implementation 'org.springframework.boot:spring-boot-starter-oauth2-resource-server'
+    implementation 'org.springframework.security:spring-security-oauth2-jose'
+    implementation 'com.nimbusds:nimbus-jose-jwt:9.37.3'
 
     // Database
     runtimeOnly 'org.postgresql:postgresql'
@@ -90,6 +81,11 @@ dependencies {
     testImplementation 'org.testcontainers:postgresql:1.19.3'
     testImplementation 'org.testcontainers:junit-jupiter:1.19.3'
     testImplementation 'io.rest-assured:rest-assured:5.4.0'
+
+    // Keycloak Testing (Phase 2)
+    // Note: Testcontainers 1.19.3 doesn't have a dedicated keycloak module
+    // We'll use GenericContainer to start Keycloak in integration tests
+    testImplementation 'org.springframework.security:spring-security-oauth2-client'
 }
 
 tasks.named('test') {
