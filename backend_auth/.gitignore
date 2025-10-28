@@ -1,0 +1,26 @@
+# Keycloak sensitive files
+*.secret
+*.key
+*.pem
+
+# Environment files
+.env
+.env.local
+
+# Temporary files
+*.tmp
+*.log
+
+# Backup files
+*.bak
+*~
+
+# IDE files
+.idea/
+.vscode/
+*.swp
+*.swo
+
+# OS files
+.DS_Store
+Thumbs.db
