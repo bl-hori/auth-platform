@@ -1,6 +1,6 @@
 # Auth Platform - 認可基盤プラットフォーム
 
-エンタープライズグレードのAPIキーベース認証・認可システム。ユーザー管理、ロールベースアクセス制御（RBAC）、ポリシー管理、監査ログ機能を提供します。
+エンタープライズグレードの認証・認可システム。Keycloak認証サーバー、ユーザー管理、ロールベースアクセス制御（RBAC）、ポリシー管理、監査ログ機能を提供します。
 
 [![Build Status](https://img.shields.io/badge/build-passing-brightgreen)](https://github.com/bl-hori/auth-platform)
 [![Test Coverage](https://img.shields.io/badge/coverage-85%25-green)](./docs/TESTING.md)
@@ -33,6 +33,7 @@ pnpm dev
 
 ### はじめに
 - **[Getting Started](./docs/GETTING_STARTED.md)** - 初回セットアップガイド
+- **[Keycloak Integration](./docs/KEYCLOAK_INTEGRATION.md)** - Keycloak認証サーバー統合ガイド
 - **[Development Guide](./docs/DEVELOPMENT.md)** - 開発ガイド
 - **[Testing Guide](./docs/TESTING.md)** - テストガイド
 - **[API Integration Guide](./docs/API_INTEGRATION_GUIDE.md)** - API統合ガイド
@@ -55,18 +56,24 @@ pnpm dev
 ┌─────────────┐
 │  Next.js 15 │ ← Frontend (React 19 + TypeScript)
 └──────┬──────┘
-       │ REST API
-       ↓
-┌─────────────┐
-│Spring Boot 3│ ← Backend (Java 21)
-└──────┬──────┘
        │
-       ├───────────┬──────────┐
-       ↓           ↓          ↓
-┌──────────┐ ┌─────────┐ ┌────────┐
-│PostgreSQL│ │  Redis  │ │ Others │
-└──────────┘ └─────────┘ └────────┘
+       ├─────────────────┬─────────────────┐
+       │ 1. Login        │ 2. API Request  │
+       ↓                 ↓                 │
+┌──────────────┐  ┌─────────────┐       │
+│  Keycloak    │  │Spring Boot 3│ ← Backend (Java 21)
+│(backend_auth)│  └──────┬──────┘  認可サーバー
+└──────────────┘         │
+  認証サーバー             ├───────────┬──────────┐
+  (JWT発行)               ↓           ↓          ↓
+                    ┌──────────┐ ┌─────────┐ ┌────────┐
+                    │PostgreSQL│ │  Redis  │ │  OPA   │
+                    └──────────┘ └─────────┘ └────────┘
 ```
+
+**認証と認可の分離**:
+- **Keycloak (backend_auth)**: 認証・JWTトークン発行
+- **Backend (Spring Boot)**: 認可・ポリシー評価
 
 ## 🛠️ 技術スタック
 
@@ -98,28 +105,37 @@ pnpm dev
 
 ## ✨ 主要機能
 
-### 1. ユーザー管理
+### 1. 認証 (Authentication)
+- ✅ Keycloak認証サーバー統合 (Phase 1: Infrastructure)
+- ✅ OIDC/OAuth2準拠
+- ✅ JWT トークン発行
+- ✅ マルチテナント対応 (organization_id claim)
+- 🚧 JWT検証統合 (Phase 2: 今後実装予定)
+
+詳細: [Keycloak Integration Guide](./docs/KEYCLOAK_INTEGRATION.md)
+
+### 2. ユーザー管理
 - ✅ ユーザーの作成・編集・削除
 - ✅ ステータス管理（有効/無効/停止中）
 - ✅ 検索・フィルタリング
 - ✅ ページネーション
 
-### 2. ロールベースアクセス制御 (RBAC)
+### 3. ロールベースアクセス制御 (RBAC)
 - ✅ ロールの定義と管理
 - ✅ 権限の割り当て
 - ✅ 階層的なロール構造
 
-### 3. ポリシー管理
+### 4. ポリシー管理
 - ✅ 柔軟なポリシー定義
 - ✅ 条件ベースの認可
 - ✅ リアルタイム更新
 
-### 4. 監査ログ
+### 5. 監査ログ
 - ✅ 全ての操作を記録
 - ✅ 詳細なフィルタリング
 - ✅ エクスポート機能
 
-### 5. パフォーマンス
+### 6. パフォーマンス
 - ✅ 10,000+ req/s のスループット
 - ✅ p95 レスポンスタイム <200ms
 - ✅ 認可チェック p95 <10ms (Redis キャッシュ)
@@ -152,6 +168,7 @@ pnpm dev
 |---------|-----|------|
 | Frontend | http://localhost:3000 | Next.jsアプリケーション |
 | Backend API | http://localhost:8080 | Spring Boot REST API |
+| **Keycloak** | **http://localhost:8180** | **認証サーバー (admin/admin)** |
 | API Docs | http://localhost:8080/swagger-ui.html | Swagger UI |
 | pgAdmin | http://localhost:5050 | PostgreSQL管理ツール |
 | SonarQube | http://localhost:9000 | コード品質分析 |
@@ -264,6 +281,11 @@ auth-platform/
 │   ├── src/gatling/           # パフォーマンステスト
 │   └── build.gradle           # Gradle設定
 │
+├── backend_auth/               # Keycloak 認証サーバー
+│   ├── realms/                # Realm設定ファイル
+│   ├── README.md              # セットアップガイド
+│   └── REALM_SETUP_GUIDE.md   # Realm設定詳細
+│
 ├── frontend/                   # Next.js フロントエンド
 │   ├── src/app/               # App Router
 │   ├── src/components/        # Reactコンポーネント
@@ -278,6 +300,7 @@ auth-platform/
 │
 ├── docs/                       # ドキュメント
 │   ├── GETTING_STARTED.md     # 初回セットアップ
+│   ├── KEYCLOAK_INTEGRATION.md # Keycloak統合ガイド
 │   ├── DEVELOPMENT.md         # 開発ガイド
 │   ├── TESTING.md             # テストガイド
 │   ├── DEPLOYMENT.md          # デプロイメント
@@ -314,6 +337,7 @@ auth-platform/
 ## 🔗 リンク
 
 - [Documentation](./docs/README.md) - 全ドキュメント
+- [Keycloak Integration Guide](./docs/KEYCLOAK_INTEGRATION.md) - 認証サーバー統合
 - [API Documentation](./docs/API_INTEGRATION_GUIDE.md) - API仕様
 - [GitHub Issues](https://github.com/bl-hori/auth-platform/issues) - バグ報告・機能リクエスト
 - [Change Log](./CHANGELOG.md) - 変更履歴
@@ -321,5 +345,5 @@ auth-platform/
 ---
 
 **開発**: Auth Platform Team
-**最終更新**: 2025-10-27
-**バージョン**: 1.0.0 (Phase 1 MVP)
+**最終更新**: 2025-10-28
+**バージョン**: 1.0.0 (Phase 1 MVP) + Keycloak Authentication (Phase 1)
