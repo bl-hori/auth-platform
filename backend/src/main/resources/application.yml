@@ -126,6 +126,27 @@ auth-platform:
         dev-key-org2-def456: 00000000-0000-0000-0000-000000000001
         test-key-xyz789: 00000000-0000-0000-0000-000000000002
 
+  # Keycloak Authentication Configuration (Phase 2: JWT Integration)
+  # TODO: Uncomment and configure when implementing JWT authentication in Phase 2
+  # keycloak:
+  #   enabled: false  # Set to true when Phase 2 is implemented
+  #   # Keycloak server URLs
+  #   base-url: ${KEYCLOAK_BASE_URL:http://localhost:8180}
+  #   realm: ${KEYCLOAK_REALM:authplatform}
+  #   # OIDC endpoints (auto-discovered via .well-known/openid-configuration)
+  #   issuer-uri: ${KEYCLOAK_ISSUER_URI:http://localhost:8180/realms/authplatform}
+  #   jwk-set-uri: ${KEYCLOAK_JWK_SET_URI:http://localhost:8180/realms/authplatform/protocol/openid-connect/certs}
+  #   # Admin console URL (for documentation)
+  #   admin-console-url: ${KEYCLOAK_ADMIN_CONSOLE_URL:http://localhost:8180/admin}
+  #   # JWT validation settings
+  #   jwt:
+  #     # Public key caching (reduce calls to Keycloak)
+  #     public-key-cache-ttl: 3600  # 1 hour in seconds
+  #     # Allowed clock skew for token validation
+  #     clock-skew-seconds: 30
+  #     # Expected audience (aud claim)
+  #     expected-audience: auth-platform-backend
+
   # Rate Limiting Configuration
   rate-limit:
     enabled: true
