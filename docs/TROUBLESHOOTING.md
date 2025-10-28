@@ -92,6 +92,162 @@ docker compose exec redis redis-cli -a <password>
 
 ## Backend の問題
 
+### JWT認証エラー
+
+#### 症状: 401 Unauthorized - Invalid JWT token
+
+```json
+{
+  "timestamp": "2024-01-28T10:15:30.123Z",
+  "status": 401,
+  "error": "Unauthorized",
+  "message": "Invalid JWT token: Signature verification failed"
+}
+```
+
+#### 解決方法
+
+1. **JWT署名を確認**
+```bash
+# JWTをデコードして内容確認 (https://jwt.io)
+echo "YOUR_JWT" | cut -d. -f2 | base64 -d | jq
+```
+
+2. **公開鍵の確認**
+```bash
+# Keycloak公開鍵エンドポイントにアクセス
+curl http://localhost:8180/realms/authplatform/protocol/openid-connect/certs | jq
+```
+
+3. **Issuer URIの確認**
+```yaml
+# application.ymlの設定確認
+authplatform:
+  keycloak:
+    issuer-uri: http://localhost:8180/realms/authplatform  # JWTのissと一致する必要あり
+```
+
+#### 症状: JWT expired
+
+```json
+{
+  "message": "Invalid JWT token: JWT expired"
+}
+```
+
+#### 解決方法
+
+1. **トークンの有効期限を確認**
+```bash
+# expクレームを確認
+echo "YOUR_JWT" | cut -d. -f2 | base64 -d | jq '.exp'
+date -d @<EXP_VALUE>
+```
+
+2. **新しいトークンを取得**
+```bash
+curl -X POST "http://localhost:8180/realms/authplatform/protocol/openid-connect/token" \
+  -H "Content-Type: application/x-www-form-urlencoded" \
+  -d "client_id=auth-platform-backend" \
+  -d "client_secret=YOUR_SECRET" \
+  -d "grant_type=client_credentials"
+```
+
+3. **Clock Skewの調整** (システム時刻がずれている場合)
+```yaml
+authplatform:
+  keycloak:
+    jwt:
+      clock-skew-seconds: 60  # 許容時間を60秒に増やす
+```
+
+#### 症状: Missing organization_id claim
+
+```json
+{
+  "message": "JWT token missing required claim: organization_id"
+}
+```
+
+#### 解決方法
+
+1. **Keycloakでorganization_id mapperを追加**
+   - Keycloak Admin Console → Clients → auth-platform-backend → Mappers
+   - Create → Protocol: openid-connect
+   - Mapper Type: User Attribute
+   - User Attribute: `organization_id`
+   - Token Claim Name: `organization_id`
+   - Add to ID token: ON
+   - Add to access token: ON
+
+2. **ユーザーにorganization_id属性を設定**
+   - Users → Select user → Attributes
+   - Key: `organization_id`
+   - Value: `your-org-uuid`
+
+3. **JWTの内容を確認**
+```bash
+echo "YOUR_JWT" | cut -d. -f2 | base64 -d | jq '.organization_id'
+```
+
+#### 症状: Organization not found
+
+```json
+{
+  "message": "Authentication failed: Organization not found: org-uuid-123"
+}
+```
+
+#### 解決方法
+
+1. **組織がデータベースに存在するか確認**
+```sql
+SELECT * FROM organizations WHERE id = 'org-uuid-123';
+```
+
+2. **組織を作成**
+```bash
+curl -X POST "http://localhost:8080/v1/organizations" \
+  -H "X-API-Key: your-api-key" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "name": "test-org",
+    "displayName": "Test Organization"
+  }'
+```
+
+3. **JWT claimのorganization_idを更新**
+   - Keycloak User Attributes を修正
+
+#### 症状: JIT Provisioning failed
+
+```
+ERROR [JwtAuthenticationFilter] User provisioning failed: ...
+```
+
+#### 解決方法
+
+1. **ログを確認**
+```bash
+tail -f logs/application.log | grep "JIT provisioning"
+```
+
+2. **データベース権限を確認**
+```sql
+-- usersテーブルへのINSERT権限確認
+SELECT grantee, privilege_type
+FROM information_schema.role_table_grants
+WHERE table_name='users';
+```
+
+3. **トランザクションタイムアウトを増やす**
+```yaml
+spring:
+  jpa:
+    properties:
+      javax.persistence.query.timeout: 5000  # 5秒
+```
+
 ### Spring Boot アプリケーションが起動しない
 
 #### 症状

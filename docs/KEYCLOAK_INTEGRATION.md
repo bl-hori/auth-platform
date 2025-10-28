@@ -467,7 +467,157 @@ KEYCLOAK_JWK_SET_URI=https://auth.example.com/realms/authplatform/protocol/openi
 
 詳細は `openspec/changes/add-keycloak-authentication/design.md` を参照。
 
-### Phase 3: Frontend統合
+### Phase 2: Backend JWT検証統合（完了）
+
+Phase 2では、BackendでのJWT検証とユーザープロビジョニング機能を実装しました。
+
+#### 実装内容
+
+1. **JWT Decoder Configuration**
+   - Spring Security OAuth2 Resource Server統合
+   - Keycloak公開鍵検証
+   - RS256署名検証
+   - クレーム検証（issuer, audience, expiration）
+
+2. **JWT Authentication Filter**
+   - `JwtAuthenticationFilter`実装
+   - `Authorization: Bearer <token>`ヘッダーからJWT抽出
+   - JwtDecoderによる検証
+   - SecurityContextへの認証情報設定
+
+3. **Just-In-Time (JIT) ユーザープロビジョニング**
+   - 初回JWT認証時の自動ユーザー作成
+   - 既存ユーザーのKeycloakリンク（email照合）
+   - `keycloak_sub`フィールドによる高速検索
+
+4. **ハイブリッド認証サポート**
+   - JWT認証（推奨）
+   - API Key認証（後方互換性）
+   - JWT優先の認証チェーン
+
+5. **データベーススキーマ拡張**
+   - `keycloak_sub`カラム追加（ユニーク制約、インデックス）
+   - `keycloak_synced_at`カラム追加
+   - Flyway Migration V4実装
+
+6. **テスト**
+   - 27 Unit Tests
+   - Integration Test Infrastructure
+
+#### 認証フロー
+
+```
+Request
+  ↓
+[RateLimitFilter]
+  ↓
+[JwtAuthenticationFilter]
+  ├─ JWT あり？
+  │   ├─ 有効？
+  │   │   ├─ ユーザー検索/作成（JIT）
+  │   │   └─ SecurityContext設定
+  │   └─ 無効 → 401 Unauthorized
+  └─ JWT なし
+      ↓
+[ApiKeyAuthenticationFilter]
+  ├─ API Key あり？
+  │   ├─ 有効？
+  │   │   └─ SecurityContext設定
+  │   └─ 無効 → 401 Unauthorized
+  └─ なし → 401 Unauthorized
+```
+
+#### JITプロビジョニングフロー
+
+```
+JWT認証リクエスト
+  ↓
+keycloak_subで検索（インデックス利用）
+  ├─ 見つかった → keycloak_synced_at更新 → 完了
+  └─ 見つからない
+      ↓
+  emailで検索
+      ├─ 見つかった → keycloak_sub設定 → 完了
+      └─ 見つからない
+          ↓
+      新規ユーザー作成
+          ├─ keycloak_sub設定
+          ├─ email設定（オプション）
+          ├─ organization設定（JWT claimから）
+          └─ status = ACTIVE
+```
+
+#### JWT Claims
+
+必須クレーム:
+- `sub`: Keycloak User ID
+- `organization_id`: 組織UUID
+- `iss`: Issuer URI
+- `aud`: Audience (auth-platform-backend)
+- `exp`: Expiration timestamp
+- `iat`: Issued at timestamp
+
+オプションクレーム:
+- `email`: ユーザーメールアドレス
+- `preferred_username`: ユーザー名
+- `name`: フルネーム
+- `roles`: ロール配列
+
+#### 設定
+
+`application.yml`:
+```yaml
+authplatform:
+  keycloak:
+    enabled: true
+    base-url: http://localhost:8180
+    realm: authplatform
+    issuer-uri: http://localhost:8180/realms/authplatform
+    jwk-set-uri: http://localhost:8180/realms/authplatform/protocol/openid-connect/certs
+    jwt:
+      public-key-cache-ttl: 3600  # 公開鍵キャッシュTTL（秒）
+      clock-skew-seconds: 30       # クロックスキュー許容時間
+      expected-audience: auth-platform-backend
+```
+
+#### API使用例
+
+JWT認証でユーザー一覧取得:
+```bash
+# 1. トークン取得
+TOKEN=$(curl -s -X POST "http://localhost:8180/realms/authplatform/protocol/openid-connect/token" \
+  -H "Content-Type: application/x-www-form-urlencoded" \
+  -d "client_id=auth-platform-backend" \
+  -d "client_secret=YOUR_SECRET" \
+  -d "grant_type=client_credentials" | jq -r '.access_token')
+
+# 2. API呼び出し
+curl -X GET "http://localhost:8080/v1/users" \
+  -H "Authorization: Bearer $TOKEN"
+```
+
+#### エラーハンドリング
+
+| エラー | HTTPステータス | 原因 |
+|--------|---------------|------|
+| Invalid JWT signature | 401 | 署名検証失敗 |
+| JWT expired | 401 | トークン期限切れ |
+| Missing organization_id | 401 | 必須クレーム不足 |
+| Invalid organization | 401 | 組織が存在しない |
+
+#### パフォーマンス最適化
+
+- **公開鍵キャッシング**: 1時間TTL
+- **keycloak_sub インデックス**: 高速ユーザー検索
+- **ステートレス認証**: セッション不要
+
+#### 詳細ドキュメント
+
+- [JWT Authentication Guide](./JWT_AUTHENTICATION_GUIDE.md)
+- [API Documentation](./API.md)
+- [Troubleshooting](./TROUBLESHOOTING.md)
+
+### Phase 3: Frontend統合（予定）
 
 1. NextAuth.js統合
 2. Authorization Code Flow + PKCE実装
@@ -486,4 +636,4 @@ KEYCLOAK_JWK_SET_URI=https://auth.example.com/realms/authplatform/protocol/openi
 ---
 
 **最終更新**: 2025-10-28
-**バージョン**: Phase 1 MVP
+**バージョン**: Phase 2 (JWT Authentication Integrated)
